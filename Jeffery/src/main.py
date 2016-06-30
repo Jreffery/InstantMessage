@@ -2,7 +2,7 @@
 
 from twisted.internet.protocol import Factory
 from twisted.internet import reactor, protocol
-
+import sys
 
 class ServerProtocol(protocol.Protocol):
     def __init__(self, factory):
@@ -11,16 +11,14 @@ class ServerProtocol(protocol.Protocol):
         self.factory.numConnections += 1
         print "client connected"
     def dataReceived(self, data):
-        self.transport.write(data)
         type = int(data[0:3])       #类型
-        print data
         if type == 1:
             self.user = data[3:]    #指定用户
             self.factory.registerClient(self, self.user)
         elif type == 2:
             flag = data.find('\n')
             receiver = data[3:flag]
-            self.factory.transportByName(receiver, flag, data)
+            self.factory.transportByName(flag, data)
         #else  未定义
     def connectionLost(self, reason):
         self.factory.logoutClient(self.user)
@@ -44,6 +42,8 @@ class ServerFactory(Factory):
         self.clientSet[data[3:flag]].transport.write(data[flag+1:])
 
 if __name__ == "__main__":
+    reload(sys)
+    sys.setdefaultencoding('utf8')
     reactor.listenTCP(8013, ServerFactory())
     reactor.run()
     
