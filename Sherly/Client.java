@@ -1,7 +1,6 @@
 import java.io.*;  
 import java.net.Socket; 
-  
-  
+
 public class Client {  
     public static void main(String []args){
     	String host = "";
@@ -44,8 +43,6 @@ public class Client {
             
             s = new Socket(host, Integer.parseInt(port));
             System.out.println("Connecting.......");
-            os = s.getOutputStream();   
-            os.write("0".getBytes()); 
             BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream())); 
 	        String buff ;
 	        while((buff = reader.readLine())!= null){
