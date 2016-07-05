@@ -1,0 +1,6 @@
+<configure>
+	<servers>
+		<server host="localhost" port="8015">Node1</server>
+		<server host="localhost" port="8016">Node2</server>
+	</servers>
+</configure>

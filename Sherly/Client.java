@@ -1,32 +1,60 @@
 import java.io.*;  
-import java.net.InetAddress;  
-import java.net.Socket;  
+import java.net.Socket; 
   
   
 public class Client {  
-      
-      
-    public static void main(String []args){ 
-    	String selfName = args[0];
-    	String testName = args[1];
-        try {  
+    public static void main(String []args){
+    	String host = "";
+    	String port = "";
+        try {
+        	System.out.println("Try to connect the mainServer to get configured server..............");
             Socket s = new Socket("127.0.0.1", 8013);  
             OutputStream os = s.getOutputStream();   
-            os.write(("001"+selfName).getBytes()); 
-            SocketClient socketClient = new SocketClient(s);
-            socketClient.start();
+            os.write("001".getBytes()); 
+            try{
+    	    	BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream())); 
+    	        String buff ;
+    	        boolean flag = false ;
+    	        while((buff = reader.readLine())!= null){
+    	        	if(flag){
+    	        		port = buff;
+    	        	}else{
+    	        		host = buff;
+    	        		flag = true;
+    	        	}
+    	        }        		
+        	}catch(Exception e){
+        		e.printStackTrace();
+        	}finally{
+        		System.out.println("You are gonging to connect "+host+":"+port);
+        		s.close();
+        	}
+            
+            System.out.println("Type 'Y' to connected or 'exit' to exit");
             BufferedReader buf = new BufferedReader(new InputStreamReader(System.in));
             String str = buf.readLine();
-            while(!str.equals("exit")){
-            	os.write(("002"+testName+"\n"+str).getBytes());
-            	os.flush();
-            	str = buf.readLine();
+            while(true){
+            	if(str.equals("Y")){
+            		break;
+            	}else if(str.equals("exit")){
+            		System.out.println("Bye!");
+            		return ;
+            	}
             }
-            socketClient.exitThread();
-
+            
+            s = new Socket(host, Integer.parseInt(port));
+            System.out.println("Connecting.......");
+            os = s.getOutputStream();   
+            os.write("0".getBytes()); 
+            BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream())); 
+	        String buff ;
+	        while((buff = reader.readLine())!= null){
+	        	System.out.println(buff);
+	        }     
         } catch (Exception e) {  
             e.printStackTrace();  
-        }  
+        }
+        System.out.println("Connection lost.");
     }  
   
 }  
@@ -52,7 +80,6 @@ class SocketClient extends Thread{
 	        		buff.append(new String(buf));
 	        		System.out.println(buff.toString());
 	        	}        		
-	        	
 	        }
     	}catch(Exception e){
     		e.printStackTrace();
