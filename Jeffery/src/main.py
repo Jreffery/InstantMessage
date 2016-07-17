@@ -50,11 +50,12 @@ def getServers(fileName):
     for server in root.getElementsByTagName('server'):
         serverSet.append(serverNode(server.getAttribute("host"),server.getAttribute("port"),server.nodeName))
     return serverSet
-    
+
+
+#start run here     
 if len(sys.argv) != 2:
     print "Please point out the configure file"
     exit(1)
-
 
 reload(sys)
 sys.setdefaultencoding('utf8')
