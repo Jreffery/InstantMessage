@@ -4,7 +4,7 @@ Created on 2016/10/6
 @author: Jeffery
 '''
 from twisted.internet import protocol
-import json
+import json, server
 
 class RegisterProtocol(protocol.Protocol):
     def __init__(self, runnable):
@@ -26,7 +26,9 @@ class RegisterFactory(protocol.ClientFactory):
     def clientConnectionLost(self, connector, reason):
         print "Connection lost:", reason.getErrorMessage()
         #stop to run
-        self.reactor.stop()
+            # run node server waiting user
+        print "Run Server"
+        self.reactor.listenTCP(8010, server.NodeFactory())
     
 class RegisterWorker():
     def run(self, protocol):
