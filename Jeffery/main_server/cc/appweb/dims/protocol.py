@@ -7,40 +7,50 @@ from twisted.internet import protocol
 import json
 
 class DimsProtocol(protocol.Protocol):
-    def __init__(self, factory, addr):
-        self.addr = addr
-        self.factory = factory
     
+    # 初始化构造函数
+    def __init__(self, factory, addr):
+        self.addr = addr                      # 连接方的地址
+        self.factory = factory                # 生成协议的工厂
+    
+    # 创建连接时调用
     def connectionMade(self):
-        self.factory.numConnection += 1;
+        self.factory.numConnection += 1;      # 连接数    
         
+    # 接收数据时调用
     def dataReceived(self, data):
         try:
-            resolver = ProtocolResolver(self, data)
-            self.response = resolver.getRunnable()
-            self.response.run()
-            self.transport.write(self.response.getResponse())
+            resolver = ProtocolResolver(self, data)             # 根据协议解析数据
+            self.response = resolver.getRunnable()              # 接收请求后需要做的
+            self.response.run()                              
+            self.transport.write(self.response.getResponse())   # 接收请求后需要响应的
+        
+        # 异常捕获
         except Exception, ex:
             response = {}
             response['code'] = 503
             response['errMsg'] = str(ex)
             self.transport.write(json.dumps(response))
-        self.transport.loseConnection()    
             
+        # 主动断开连接
+        self.transport.loseConnection()    
+    
+    # 连接断开时调用        
     def connectionLost(self, reason=protocol.connectionDone):
         print reason
         self.factory.numConnection -= 1
         
-
+# 协议的解析者
 class ProtocolResolver():
     def __init__(self, dimsprotocol, data):
-        self.dims = dimsprotocol
-        self.data = data
-        self.resolveMsg()
+        self.dims = dimsprotocol              # 协议
+        self.data = data                      # 数据
+        self.resolveMsg()                     # 解析协议
         
     def getRunnable(self):
-        return self.service
+        return self.service                   # 返回服务
         
+    # # 解析协议
     def resolveMsg(self):
         msg = json.loads(self.data)
         if msg['type'] == 8000:
@@ -52,12 +62,14 @@ class ProtocolResolver():
         else:
             raise Exception, "no such protocol"
 
+# 抽象对象
 class ProtocolRunable():
     def run(self):
         pass
     def getResponse(self):
         pass
     
+# 具体服务定义 --加入节点服务   
 class JoinService(ProtocolRunable):
     def __init__(self, dims):
         self.dims = dims
@@ -69,8 +81,7 @@ class JoinService(ProtocolRunable):
     def getResponse(self):
         return json.dumps(self.response)
 
-
-    
+# 具体服务定义 -- 接入用户服务  
 class AccessService(ProtocolRunable):
     def __init__(self, dims, appid):
         self.appid = appid
@@ -78,7 +89,6 @@ class AccessService(ProtocolRunable):
     def run(self):
         #check appid
         #database
-        
         #---------------- core ----------------
         #accept
         appidDict = self.dims.factory.appidConnections
