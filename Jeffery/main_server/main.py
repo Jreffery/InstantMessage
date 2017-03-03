@@ -11,5 +11,6 @@ from cc.appweb.dims.factory import DimsFactory
 if __name__ == '__main__':
     # 监听端口号8000，后期需可配置
     reactor.listenTCP(8000, DimsFactory())
-    # 进入事件循环（测试）
+    # 进入事件循环
     reactor.run()
+    # 测试tag
