@@ -8,7 +8,7 @@ from twisted.internet import reactor
 from cc.appweb.dims import register, server
 
 if __name__ == '__main__':
-    # å“ˆå“ˆå“ˆutf-8ç¼–ç 
+    # ²âÊÔ±àÂë
     reactor.connectTCP('localhost',8000, register.RegisterFactory(reactor))
     reactor.run()
     
