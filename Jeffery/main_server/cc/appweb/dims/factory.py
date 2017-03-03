@@ -1,3 +1,4 @@
+# encoding: utf-8
 '''
 Created on 2016/10/6
 
@@ -10,8 +11,8 @@ from protocol import DimsProtocol
 class DimsFactory(Factory):
     def __init__(self):
         self.numConnection = 0                 # 连接数
-        self.nodeConnections = {}              # 节点服务器集合
-        self.appidConnections = {}             # appid集合
+        self.nodeConnections = {}              # 节点服务器字典
+        self.appidConnections = {}             # appid字典
         print 'Factory init'
         
     def buildProtocol(self, addr):

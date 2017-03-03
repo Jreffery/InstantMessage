@@ -1,3 +1,4 @@
+# encoding: utf-8
 # client  
   
 import socket, json  
@@ -6,10 +7,10 @@ address = ('127.0.0.1', 8000)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
 s.connect(address)  
 
-s.send('{"type":8001,"appid":"1111111111111111","usr":"xxxxxx","pwd":"xxxxxx"}')  
+s.send('{"type":8001,"appid":"1111111111111111","usr":"jeffery","pwd":"xxxxxx"}')  
   
 data = s.recv(512)  
-print 'the data received is',data  
+print 'the data received is', data  
 
 rep = json.loads(data)
 if rep['code'] == 200:
@@ -19,9 +20,13 @@ if rep['code'] == 200:
 	address = (host,port)
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
 	s.connect(address)
-	s.send('{"type":8002,"appid":"1111111111111111","usr":"xxxxxx","pwd":"xxxxxx"}')  
+	s.send('{"type":8002,"appid":"1111111111111111","usr":"jeffery","pwd":"xxxxxx"}')  
 	data = s.recv(512)  
 	print 'the data received is',data   
 
+s.send('{"type":8003,"data":"hello, ranscey","receiver":"ranscey"}')
+
+data = s.recv(512)  
+print 'the data received is', data 
 
 s.close()  

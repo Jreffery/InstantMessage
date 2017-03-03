@@ -1,3 +1,4 @@
+# encoding: utf-8
 '''
 Created on 2016/10/6
 
@@ -13,4 +14,3 @@ if __name__ == '__main__':
     reactor.listenTCP(8000, DimsFactory())
     # 进入事件循环
     reactor.run()
-    # 测试tag

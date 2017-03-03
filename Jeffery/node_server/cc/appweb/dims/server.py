@@ -1,3 +1,4 @@
+# encoding: utf-8
 '''
 Created on 2016/10/7
 
@@ -5,35 +6,39 @@ Created on 2016/10/7
 '''
 
 from twisted.internet import protocol
+from abstract import ProtocolRunnable
 import json
 
 # 对用户服务协议
 class NodeProtocol(protocol.Protocol):
     def __init__(self, factory):
         self.factory = factory
+        
     def connectionMade(self):
         self.factory.connectionNum += 1
+        
     def connectionLost(self, reason=protocol.connectionDone):
         self.factory.connectionNum -= 1
+        
     def dataReceived(self, data):
         try:
             resolver = ProtocolResolver(self, data)
             self.response = resolver.getRunnable()
-            self.response.run()
+            self.response.run(self)
             self.transport.write(self.response.getResponse())
         except Exception, ex:
             response = {}
             response['code'] = 503
             response['errMsg'] = str(ex)
             self.transport.write(json.dumps(response))
-        self.transport.loseConnection()  
 
 class NodeFactory(protocol.Factory):
     def __init__(self):
         self.connectionNum = 0
+        self.nodeSet = {}
+        
     def buildProtocol(self, addr):
         return NodeProtocol(self) 
-    
     
 class ProtocolResolver():
     def __init__(self, dimsprotocol, data):
@@ -48,26 +53,45 @@ class ProtocolResolver():
         msg = json.loads(self.data)
         if msg['type'] == 8002:
             self.service = AuthService(msg)
+        elif msg['type'] == 8003:
+            self.service = TransferService(msg)
         else:
             raise Exception, "no such protocol"
 
-class ProtocolRunable():
-    def run(self):
-        pass
-    def getResponse(self):
-        pass
-        
-class AuthService(ProtocolRunable):
+# 认证服务，将用户加入集群
+class AuthService(ProtocolRunnable):
     def __init__(self, data):
         self.data = data
         self.response = {}
-    def run(self):
-        appid = self.data['appid']
-        usr = self.data['usr']
+    def run(self, protocol):
+        appid = protocol.appid =  self.data['appid']
+        usr = protocol.usr = self.data['usr']
         pwd = self.data['pwd']
+        protocol.factory.nodeSet[appid + '-' + usr] = protocol
+        self.response['code'] = 200
         print appid, usr, pwd
     def getResponse(self):
-        self.response['code'] = 200
+        return json.dumps(self.response)
+        
+# 转发服务
+class TransferService(ProtocolRunnable):
+    def __init__(self, data):
+        self.data = data
+        self.response = {} 
+    
+    def run(self, protocol):
+        if(protocol.factory.nodeSet[protocol.appid +'-' +self.data['receiver']] is not None):
+            receiver = protocol.factory.nodeSet[protocol.appid +'-' +self.data['receiver']]
+            transferData = {}
+            transferData['type'] = 7003
+            transferData['sender'] = protocol.usr
+            transferData['data'] = self.data['data']
+            receiver.transport.write(json.dumps(transferData))   # 转发
+            self.response['code'] = 200
+        else:
+            self.response['code'] = 503
+        
+    def getResponse(self):
         return json.dumps(self.response)
         
         

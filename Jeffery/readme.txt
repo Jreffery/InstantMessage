@@ -19,14 +19,14 @@ Jeffery's folder
 {
 	"type":8001,
 	"appid":'1111111111111111',       //16位
-	"usr":"xxxxxxxxxxxx",        //appid应用下的用户名，开发者指定。
+	"usr":"xxxxxxxxxxxxx",        //appid应用下的用户名，开发者指定。
 	"pwd":"xxxxxxxxxxxxx"        //appid应用下的密码，开发者指定。
 	//服务器将校验，存在并检验成功则返回200。存在但检验不成功则返回失败，不存在则创建。
 }
 
 //响应
 {
-	"code":200,         //200成功，503无服务
+	"code":200,         //200成功，503无服务，一般为服务器压力过大
 	"nodeMsg":'127.0.0.1-8010'     //节点信息
 }
 
@@ -36,8 +36,8 @@ Jeffery's folder
 {
 	"code"：8002,
 	"appid":"1111111111111111",
-	"usr":"xxxxxxxx",
-	"pwd":"xxxxxxxxx"
+	"usr":"xxxxxxxxxxxxx",
+	"pwd":"xxxxxxxxxxxxx"
 }
 //响应
 {
@@ -45,6 +45,23 @@ Jeffery's folder
 }
 
 
+// -----------发送消息-------------
+//发送方
+{
+	'type':8003,
+	'data':'xxxxxxxxxxxx',
+	'receiver':'xxxxxxxx'
+}
+//响应
+{
+	'code':200
+}
+//接收方
+{
+	'type'：7003,
+	'data':'xxxxxxxxxxx',
+	'sender':'xxxxxxxxx'
+}
 
 
 
