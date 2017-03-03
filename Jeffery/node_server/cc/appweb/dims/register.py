@@ -6,6 +6,7 @@ Created on 2016/10/6
 from twisted.internet import protocol
 import json, server
 
+# 注册者协议
 class RegisterProtocol(protocol.Protocol):
     def __init__(self, runnable):
         self.run = runnable

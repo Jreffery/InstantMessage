@@ -7,6 +7,7 @@ Created on 2016/10/7
 from twisted.internet import protocol
 import json
 
+# 对用户服务协议
 class NodeProtocol(protocol.Protocol):
     def __init__(self, factory):
         self.factory = factory

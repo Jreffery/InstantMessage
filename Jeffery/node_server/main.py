@@ -9,5 +9,6 @@ from cc.appweb.dims import register, server
 
 if __name__ == '__main__':
     reactor.connectTCP('localhost',8000, register.RegisterFactory(reactor))
+    # 进入事件循环
     reactor.run()
     
