@@ -26,7 +26,7 @@ Jeffery's folder
 
 //响应
 {
-	"code":200,         //200成功，503无服务，一般为服务器压力过大
+	"code":200,         //200成功，500用户校验失败，503无服务，一般为服务器压力过大，504appid失败
 	"nodeMsg":'127.0.0.1-8010'     //节点信息
 }
 
@@ -34,13 +34,14 @@ Jeffery's folder
 //-----------用户连接协议----------
 //身份登入
 {
-	"code"：8002,
+	"type"：8002,
 	"appid":"1111111111111111",
 	"usr":"xxxxxxxxxxxxx",
 	"pwd":"xxxxxxxxxxxxx"
 }
 //响应
 {
+	'type':7002
 	"code":200        //200成功，503无服务，一般为服务器压力过大
 }
 
@@ -50,20 +51,29 @@ Jeffery's folder
 {
 	'type':8003,
 	'data':'xxxxxxxxxxxx',
-	'receiver':'xxxxxxxx'
+	'receiver':'xxxxxxxx'，
+	'msgID':xxxxx
 }
 //响应
 {
-	'code':200
+	'type':7003,
+	'code':200,
+	'msgID':xxxx
 }
 //接收方
 {
-	'type'：7003,
+	'type'：7103,
 	'data':'xxxxxxxxxxx',
 	'sender':'xxxxxxxxx'
 }
 
 
+//------------心跳包--------------
+//发送者，每隔10秒触发一次
+{
+	'type':8004
+}
+// 服务端不响应
 
 
 

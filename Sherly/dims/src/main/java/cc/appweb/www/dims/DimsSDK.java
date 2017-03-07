@@ -142,4 +142,14 @@ public class DimsSDK {
         mContext.bindService(intent, mDimsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    /**
+     * 发送消息
+     * */
+    public void send(long msgID, String receiver, String data){
+        try {
+            mDimsProxy.send(msgID, receiver, data);
+        }catch (RemoteException e){
+            e.printStackTrace();
+        }
+    }
 }

@@ -15,7 +15,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import cc.appweb.www.Constant;
+import cc.appweb.www.core.Sender;
 import cc.appweb.www.core.protocol.AccessServiceProtocol;
+import cc.appweb.www.core.protocol.MessageProtocol;
 
 /**
  * @author jefferygong
@@ -36,6 +38,8 @@ public class DimsService extends Service {
     private static final String TAG = "DimsService";
     /** binder实例 **/
     private DimsServiceImp mBinder = new DimsServiceImp();
+    /** sender实例 **/
+    private Sender sender = null;
 
     @Override
     public void onCreate(){
@@ -55,6 +59,14 @@ public class DimsService extends Service {
         public void basicTypes(int anInt, long aLong, boolean aBoolean,
                                float aFloat, double aDouble, String aString) throws RemoteException{
 
+        }
+
+        @Override
+        public void send(long msgID, String receiver, String data){
+            MessageProtocol protocol = new MessageProtocol();
+            protocol.receiver = receiver;
+            protocol.data = data;
+            sender.send(protocol.getSendByte());
         }
 
         /**
@@ -95,15 +107,19 @@ public class DimsService extends Service {
                     int nodePort = Integer.parseInt(nodeInfo.substring(boundary+1, nodeInfo.length()-1));
 
                     // 发起节点服务器连接
-                    
+                    Socket nodeSocket = new Socket(nodeIp, nodePort);
                     // 启动sender 和  receiver
+                    sender = Sender.getSenderInstance(nodeSocket.getOutputStream());
 
+                }else if(responseCode == 500){
+                    resultFlag = CONNECT_CHECK_USER_FAILED;
                 }else if(responseCode == 503){
                     resultFlag = CONNECT_SERVER_FAILED;
+                }else if(responseCode == 504){
+                    resultFlag = CONNECT_CHECK_APP_FAILED;
                 }else {
                     resultFlag = CONNECT_UNKNOWN_FAILED;
                 }
-
             }catch (UnknownHostException e){
                 resultFlag = CONNECT_SERVER_FAILED;
             }catch (IOException e){
@@ -113,4 +129,5 @@ public class DimsService extends Service {
             }
         }
     }
+
 }

@@ -15,4 +15,9 @@ interface IDimsConnectInterface {
      * 连接至服务器
      **/
     int connectToDims(String appId, String usr, String pwd);
+
+    /**
+     * 发送消息
+     **/
+     void send(long msgID, String receiver, String data);
 }
