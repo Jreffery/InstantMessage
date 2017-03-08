@@ -41,7 +41,7 @@ Jeffery's folder
 }
 //响应
 {
-	'type':7002
+	'type':7002,
 	"code":200        //200成功，503无服务，一般为服务器压力过大
 }
 
@@ -51,7 +51,7 @@ Jeffery's folder
 {
 	'type':8003,
 	'data':'xxxxxxxxxxxx',
-	'receiver':'xxxxxxxx'，
+	'receiver':'xxxxxxxx',
 	'msgID':xxxxx
 }
 //响应

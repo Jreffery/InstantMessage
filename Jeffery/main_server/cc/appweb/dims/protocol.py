@@ -17,10 +17,12 @@ class DimsProtocol(protocol.Protocol):
     
     # 创建连接时调用
     def connectionMade(self):
+        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' connected.'
         self.factory.numConnection += 1;      # 连接数    
         
     # 接收数据时调用
     def dataReceived(self, data):
+        print data
         try:
             resolver = ProtocolResolver(self, data)             # 根据协议解析数据
             self.response = resolver.getRunnable()              # 接收请求后执行
@@ -36,7 +38,7 @@ class DimsProtocol(protocol.Protocol):
     
     # 连接断开时调用        
     def connectionLost(self, reason=protocol.connectionDone):
-        print reason
+        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' lost.'
         self.factory.numConnection -= 1
         
 # 协议的解析者

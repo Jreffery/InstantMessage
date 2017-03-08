@@ -11,16 +11,20 @@ import json
 
 # 对用户服务协议
 class NodeProtocol(protocol.Protocol):
-    def __init__(self, factory):
+    def __init__(self, factory, addr):
+        self.addr = addr
         self.factory = factory
         
     def connectionMade(self):
+        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' connected.'
         self.factory.connectionNum += 1
         
     def connectionLost(self, reason=protocol.connectionDone):
+        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' lost.'
         self.factory.connectionNum -= 1
         
     def dataReceived(self, data):
+        print data
         try:
             resolver = ProtocolResolver(self, data)
             self.response = resolver.getRunnable()
@@ -38,7 +42,7 @@ class NodeFactory(protocol.Factory):
         self.nodeSet = {}
         
     def buildProtocol(self, addr):
-        return NodeProtocol(self) 
+        return NodeProtocol(self, addr) 
     
 class ProtocolResolver():
     def __init__(self, dimsprotocol, data):

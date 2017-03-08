@@ -1,6 +1,7 @@
 package cc.appweb.www.service;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -15,8 +16,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import cc.appweb.www.Constant;
+import cc.appweb.www.core.Receiver;
 import cc.appweb.www.core.Sender;
 import cc.appweb.www.core.protocol.AccessServiceProtocol;
+import cc.appweb.www.core.protocol.LoginProtocol;
 import cc.appweb.www.core.protocol.MessageProtocol;
 
 /**
@@ -38,12 +41,17 @@ public class DimsService extends Service {
     private static final String TAG = "DimsService";
     /** binder实例 **/
     private DimsServiceImp mBinder = new DimsServiceImp();
+    /** Context应用 **/
+    Context mContext = null;
     /** sender实例 **/
     private Sender sender = null;
+    /** receiver **/
+    private Receiver receiver = null;
 
     @Override
     public void onCreate(){
-        Log.d(TAG, "DimsService run server!");
+        Log.i(TAG, "DimsService run server!");
+        mContext = this;
     }
 
     @Override
@@ -74,6 +82,7 @@ public class DimsService extends Service {
          * */
         @Override
         public int connectToDims(String appId, String usr, String pwd){
+            Log.i(TAG, "DimsService.connectToDims");
             int resultFlag = CONNECT_SUCCESS;
             try{
                 // 连接核心
@@ -88,6 +97,7 @@ public class DimsService extends Service {
 
                 // 发送接入请求
                 bufferedOutputStream.write(protocol.getSendByte());
+                bufferedOutputStream.flush();
                 // 接收响应
                 byte[] buff = new byte[1024];
                 int readByte = 0;
@@ -95,21 +105,28 @@ public class DimsService extends Service {
                 while ((readByte = bufferedInputStream.read(buff)) > 0 ){
                     stringBuilder.append(new String(buff, 0, readByte));
                 }
-                protocol.toReceive = stringBuilder.toString();
+                protocol.receiveData = stringBuilder.toString();
                 JSONObject accessServiceResult = (JSONObject) protocol.getReceiveData();
-
                 int responseCode = accessServiceResult.getInt("code");
                 if( responseCode == 200){
                     // 主服务器成功
                     String nodeInfo = accessServiceResult.getString("nodeMsg");
                     int boundary = nodeInfo.indexOf('-');
-                    String nodeIp = nodeInfo.substring(0, boundary - 1);
-                    int nodePort = Integer.parseInt(nodeInfo.substring(boundary+1, nodeInfo.length()-1));
-
+                    String nodeIp = nodeInfo.substring(0, boundary);
+                    int nodePort = Integer.parseInt(nodeInfo.substring(boundary+1, nodeInfo.length()));
                     // 发起节点服务器连接
                     Socket nodeSocket = new Socket(nodeIp, nodePort);
                     // 启动sender 和  receiver
                     sender = Sender.getSenderInstance(nodeSocket.getOutputStream());
+                    receiver = Receiver.getReceiverInstance(mContext, nodeSocket.getInputStream());
+
+                    LoginProtocol loginProtocol = new LoginProtocol();
+                    loginProtocol.appid = appId;
+                    loginProtocol.usr = usr;
+                    loginProtocol.pwd = pwd;
+
+                    Log.i(TAG, "Send login data.");
+                    sender.send(loginProtocol.getSendByte());
 
                 }else if(responseCode == 500){
                     resultFlag = CONNECT_CHECK_USER_FAILED;
@@ -121,13 +138,14 @@ public class DimsService extends Service {
                     resultFlag = CONNECT_UNKNOWN_FAILED;
                 }
             }catch (UnknownHostException e){
+                e.printStackTrace();
                 resultFlag = CONNECT_SERVER_FAILED;
             }catch (IOException e){
+                e.printStackTrace();
                 resultFlag = CONNECT_TIMEOUT;
             }finally {
                 return  resultFlag;
             }
         }
     }
-
 }

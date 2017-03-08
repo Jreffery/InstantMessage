@@ -27,9 +27,13 @@ public class Receiver {
     InputStream inputStream = null;
     /** service上下文 **/
     Context mContext = null;
+    /** 接收线程 **/
+    ReceiverThread receiverThread = null;
 
     private Receiver(Context context, InputStream inputStream){
         this.inputStream = inputStream;
+        receiverThread= new ReceiverThread();
+        receiverThread.start();
         mContext = context;
     }
 
@@ -62,7 +66,7 @@ public class Receiver {
                     int type = jsonObject.getInt("type");
                     if(type == 7002){
                         // 接入响应
-                        Log.d(TAG, "Connect to node server success.");
+                        Log.i(TAG, "Connect to node server success.");
                     }else if(type == 7003){
                         // 发送响应
                         Intent intent = new Intent();

@@ -31,8 +31,9 @@ public class Sender {
     private Sender(OutputStream stream){
         outputStream = stream;
         // 开启独立线程进行发送
+        senderThread = new SenderThread();
         senderThread.start();
-        Log.d(TAG, "Sender thread run now.");
+        Log.i(TAG, "Sender thread run now.");
     };
 
     public static Sender getSenderInstance(OutputStream stream){
@@ -47,6 +48,7 @@ public class Sender {
     }
 
     public void send(byte[] sendData){
+        Log.i(TAG, "Sender.send()");
         senderThread.send(sendData);
     }
     /**
@@ -83,9 +85,11 @@ public class Sender {
          * 发送消息
          * */
         public void send(final byte[] sendData){
+            Log.i(TAG, "Sender thread send data.");
             senderHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    Log.i(TAG, "Sender loop send data.");
                     try{
                         outputStream.write(sendData);
                         outputStream.flush();

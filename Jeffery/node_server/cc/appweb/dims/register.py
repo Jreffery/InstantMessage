@@ -33,10 +33,9 @@ class RegisterFactory(protocol.ClientFactory):
         
     # 断开连接    
     def clientConnectionLost(self, connector, reason):
-        print "Connection lost:", reason.getErrorMessage()
         print "Run Server"
         # 启动服务
-        self.reactor.listenTCP(8010, server.NodeFactory())
+        self.reactor.listenTCP(8010, server.NodeFactory(), interface='')
     
 # 注册工人--真正执行注册的核心    
 class RegisterWorker():

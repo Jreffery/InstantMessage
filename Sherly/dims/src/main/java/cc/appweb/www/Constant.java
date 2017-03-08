@@ -8,7 +8,7 @@ package cc.appweb.www;
  */
 public class Constant {
     /** 系统ip地址 **/
-    public static final String serverIP = "localhost";
+    public static final String serverIP = "192.168.253.1";
     /** 系统的端口号 **/
     public static final int serverPort = 8000;
     /** appKey的meta-data key **/

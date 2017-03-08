@@ -13,6 +13,7 @@ import android.util.Log;
 import cc.appweb.www.Constant;
 import cc.appweb.www.access.OnConnectedResultListener;
 import cc.appweb.www.core.DimsAsyncTask;
+import cc.appweb.www.service.DimsService;
 import cc.appweb.www.service.IDimsConnectInterface;
 
 /**
@@ -36,23 +37,23 @@ public class DimsSDK {
     public static final int CONNECT_UNKNOWN_FAILED = 6;      // 未知失败
 
     /** Context上下文 **/
-    private Context mContext;
+    private static Context mContext;
     /** appKey区分不同的应用 **/
-    private String  mAppKey = null;
+    private static String  mAppKey = null;
     /** 用户名，用以区分一条连接对应的用户 **/
-    private String mUserName = null;
+    private static String mUserName = null;
     /** 密码，用作校验，开发者自定义 **/
-    private String mPassword = null;
+    private static String mPassword = null;
     /** 连接结果回调监听者 **/
-    private OnConnectedResultListener mOnConnectedResultListener = null;
+    private static OnConnectedResultListener mOnConnectedResultListener = null;
     /** 连接服务的远程代理 **/
-    private IDimsConnectInterface mDimsProxy = null;
+    private static IDimsConnectInterface mDimsProxy = null;
 
     /**
      * 初始化sdk，在进程开始时调用
      * 获取appKey为连接作准备
      * */
-    public void initSDK(Context appContext){
+    public static void initSDK(Context appContext){
         try{
             mContext = appContext;
             // 获取app key
@@ -69,7 +70,7 @@ public class DimsSDK {
      * 设置用户名和密码
      * 宿主应用登录成功后调用，与宿主应用对应
      * */
-    public void setUserAndPwd(String usr, String pwd){
+    public static void setUserAndPwd(String usr, String pwd){
         mUserName = usr;
         mPassword = pwd;
     }
@@ -77,7 +78,7 @@ public class DimsSDK {
     /**
      * 连接至服务器
      * */
-    public void connect(){
+    public static void connect(){
         if(mAppKey == null){
             throw new RuntimeException("AppKey is not nullable, please check the AndroidManifest.");
         }
@@ -85,46 +86,46 @@ public class DimsSDK {
             throw new RuntimeException("Username or password is null.");
         }
 
-        // 启动线程来创建连接服务
-        DimsAsyncTask connectAsyncTask = new DimsAsyncTask() {
-            private int connectResult;
-            @Override
-            protected void runTask() {
-                // 绑定服务
-                bindDimsConnectService();
-                try{
-                    connectResult = mDimsProxy.connectToDims(mAppKey, mUserName, mPassword);
-                }catch (RemoteException e){
-                    e.printStackTrace();
-                    connectResult = REMOTE_EX;
-                }
-            }
-
-            @Override
-            protected void onRunEnd() {
-                if(mOnConnectedResultListener != null){
-                    mOnConnectedResultListener.onConnectedResult(connectResult);
-                }
-            }
-        };
-        connectAsyncTask.execute();
+        bindDimsConnectService();
     }
 
     /**
      * 设置连接结果回调监听者
      * */
-    public void setOnConnectedResultListener(OnConnectedResultListener listener){
+    public static void setOnConnectedResultListener(OnConnectedResultListener listener){
         mOnConnectedResultListener = listener;
     }
 
     /**
      * 服务绑定回调
      * */
-    private ServiceConnection mDimsServiceConnection = new ServiceConnection() {
+    private static ServiceConnection mDimsServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "DimsService connected!");
+            Log.i(TAG, "DimsService connected!");
             mDimsProxy = IDimsConnectInterface.Stub.asInterface(service);
+            // 启动线程来创建连接服务
+            DimsAsyncTask connectAsyncTask = new DimsAsyncTask() {
+                private int connectResult;
+                @Override
+                protected void runTask() {
+                    // 绑定服务
+                    try{
+                        connectResult = mDimsProxy.connectToDims(mAppKey, mUserName, mPassword);
+                    }catch (RemoteException e){
+                        e.printStackTrace();
+                        connectResult = REMOTE_EX;
+                    }
+                }
+
+                @Override
+                protected void onRunEnd() {
+                    if(mOnConnectedResultListener != null){
+                        mOnConnectedResultListener.onConnectedResult(connectResult);
+                    }
+                }
+            };
+            connectAsyncTask.execute();
         }
 
         @Override
@@ -137,15 +138,15 @@ public class DimsSDK {
     /**
      * 连接服务
      * */
-    private void bindDimsConnectService(){
-        Intent intent = new Intent("cc.appweb.www.service.DimsService");
+    private static void bindDimsConnectService(){
+        Intent intent = new Intent(mContext, DimsService.class);
         mContext.bindService(intent, mDimsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     /**
      * 发送消息
      * */
-    public void send(long msgID, String receiver, String data){
+    public static void send(long msgID, String receiver, String data){
         try {
             mDimsProxy.send(msgID, receiver, data);
         }catch (RemoteException e){
