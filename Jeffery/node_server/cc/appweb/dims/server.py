@@ -55,6 +55,8 @@ class ProtocolResolver():
             self.service = AuthService(msg)
         elif msg['type'] == 8003:
             self.service = TransferService(msg)
+        elif msg['type'] == 8004:
+            pass
         else:
             raise Exception, "no such protocol"
 
@@ -68,6 +70,7 @@ class AuthService(ProtocolRunnable):
         usr = protocol.usr = self.data['usr']
         pwd = self.data['pwd']
         protocol.factory.nodeSet[appid + '-' + usr] = protocol
+        self.response['type'] = 7002
         self.response['code'] = 200
         print appid, usr, pwd
     def getResponse(self):
@@ -83,10 +86,12 @@ class TransferService(ProtocolRunnable):
         if(protocol.factory.nodeSet[protocol.appid +'-' +self.data['receiver']] is not None):
             receiver = protocol.factory.nodeSet[protocol.appid +'-' +self.data['receiver']]
             transferData = {}
-            transferData['type'] = 7003
+            transferData['type'] = 7103
             transferData['sender'] = protocol.usr
             transferData['data'] = self.data['data']
             receiver.transport.write(json.dumps(transferData))   # 转发
+            self.response['type'] = 7003
+            self.response['msgID'] = self.data['msgID']
             self.response['code'] = 200
         else:
             self.response['code'] = 503
