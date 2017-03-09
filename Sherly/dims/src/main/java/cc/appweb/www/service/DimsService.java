@@ -44,9 +44,9 @@ public class DimsService extends Service {
     /** Context应用 **/
     Context mContext = null;
     /** sender实例 **/
-    private Sender sender = null;
+    private Sender mSender = null;
     /** receiver **/
-    private Receiver receiver = null;
+    private Receiver mReceiver = null;
 
     @Override
     public void onCreate(){
@@ -66,7 +66,6 @@ public class DimsService extends Service {
         @Override
         public void basicTypes(int anInt, long aLong, boolean aBoolean,
                                float aFloat, double aDouble, String aString) throws RemoteException{
-
         }
 
         @Override
@@ -74,7 +73,7 @@ public class DimsService extends Service {
             MessageProtocol protocol = new MessageProtocol();
             protocol.receiver = receiver;
             protocol.data = data;
-            sender.send(protocol.getSendByte());
+            mSender.send(protocol.getSendByte());
         }
 
         /**
@@ -117,8 +116,8 @@ public class DimsService extends Service {
                     // 发起节点服务器连接
                     Socket nodeSocket = new Socket(nodeIp, nodePort);
                     // 启动sender 和  receiver
-                    sender = Sender.getSenderInstance(nodeSocket.getOutputStream());
-                    receiver = Receiver.getReceiverInstance(mContext, nodeSocket.getInputStream());
+                    mSender = Sender.getSenderInstance(nodeSocket.getOutputStream());
+                    mReceiver = Receiver.getReceiverInstance(mContext, nodeSocket.getInputStream());
 
                     LoginProtocol loginProtocol = new LoginProtocol();
                     loginProtocol.appid = appId;
@@ -126,7 +125,7 @@ public class DimsService extends Service {
                     loginProtocol.pwd = pwd;
 
                     Log.i(TAG, "Send login data.");
-                    sender.send(loginProtocol.getSendByte());
+                    mSender.send(loginProtocol.getSendByte());
 
                 }else if(responseCode == 500){
                     resultFlag = CONNECT_CHECK_USER_FAILED;

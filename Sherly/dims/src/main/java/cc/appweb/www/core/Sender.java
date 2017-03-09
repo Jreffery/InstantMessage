@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import cc.appweb.www.Constant;
 import cc.appweb.www.core.protocol.HeartBeatProtocol;
@@ -23,16 +24,16 @@ public class Sender {
     /** 单例 **/
     private static Sender senderInstance = null;
     /** 工作线程 **/
-    private SenderThread senderThread = null;
+    private SenderThread mSenderThread = null;
     /** 输出流 **/
-    OutputStream outputStream = null;
+    OutputStream mOutputStream = null;
 
     /** 单例构造方法 **/
     private Sender(OutputStream stream){
-        outputStream = stream;
+        mOutputStream = stream;
         // 开启独立线程进行发送
-        senderThread = new SenderThread();
-        senderThread.start();
+        mSenderThread = new SenderThread();
+        mSenderThread.start();
         Log.i(TAG, "Sender thread run now.");
     };
 
@@ -48,34 +49,53 @@ public class Sender {
     }
 
     public void send(byte[] sendData){
-        Log.i(TAG, "Sender.send()");
-        senderThread.send(sendData);
+        mSenderThread.send(sendData);
     }
     /**
      * 发送工作线程
      * */
     class SenderThread extends Thread{
         /** 发送工作的Looper对象 **/
-        Looper senderLooper = null;
+        private Looper mSenderLooper = null;
         /** 发送工作的处理者 **/
-        private Handler senderHandler = null;
+        private Handler mSenderHandler = null;
+        /** senderHandler未初始化前的消息队列 **/
+        private ArrayList<byte[]> mMessageQueueUnInit = null;
 
         @Override
         public void run(){
             /** Looper对象，进行消息循环 **/
             Looper.prepare();
-            senderLooper = Looper.myLooper();
-            senderHandler = new Handler();
+            mSenderLooper = Looper.myLooper();
+            synchronized (SenderThread.class){
+                mSenderHandler = new Handler();
+                if(mMessageQueueUnInit != null){
+                    for (int i = 0; i < mMessageQueueUnInit.size(); i++){
+                        final byte[] data = mMessageQueueUnInit.get(i);
+                        mSenderHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try{
+                                    mOutputStream.write(data);
+                                    mOutputStream.flush();
+                                }catch (IOException e){
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                }
+            }
             final HeartBeatProtocol beatProtocol = new HeartBeatProtocol();
-            senderHandler.postDelayed(new Runnable() {
+            mSenderHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     try{
-                        outputStream.write(beatProtocol.getSendByte());
+                        mOutputStream.write(beatProtocol.getSendByte());
                     }catch (IOException e){
                         e.printStackTrace();
                     }
-                    senderHandler.postDelayed(this, Constant.HEART_BEAT_FREQUENCY);
+                    mSenderHandler.postDelayed(this, Constant.HEART_BEAT_FREQUENCY);
                 }
             }, Constant.HEART_BEAT_FREQUENCY);
             Looper.loop();   // 循环
@@ -85,14 +105,24 @@ public class Sender {
          * 发送消息
          * */
         public void send(final byte[] sendData){
-            Log.i(TAG, "Sender thread send data.");
-            senderHandler.post(new Runnable() {
+            // 此时senderHandler可能还没初始化
+            if(mSenderHandler == null){
+                synchronized (SenderThread.class){
+                    if (mSenderHandler == null){
+                        if (mMessageQueueUnInit == null){
+                            mMessageQueueUnInit = new ArrayList<>();
+                        }
+                        mMessageQueueUnInit.add(sendData);
+                        return;
+                    }
+                }
+            }
+            mSenderHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i(TAG, "Sender loop send data.");
                     try{
-                        outputStream.write(sendData);
-                        outputStream.flush();
+                        mOutputStream.write(sendData);
+                        mOutputStream.flush();
                     }catch (IOException e){
                         e.printStackTrace();
                     }

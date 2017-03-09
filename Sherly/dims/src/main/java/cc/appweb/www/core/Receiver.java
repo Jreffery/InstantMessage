@@ -24,16 +24,16 @@ public class Receiver {
     /** 单例 **/
     private static Receiver receiverInstance = null;
     /** 输入流 **/
-    InputStream inputStream = null;
+    InputStream mInputStream = null;
     /** service上下文 **/
     Context mContext = null;
     /** 接收线程 **/
-    ReceiverThread receiverThread = null;
+    private ReceiverThread mReceiverThread = null;
 
     private Receiver(Context context, InputStream inputStream){
-        this.inputStream = inputStream;
-        receiverThread= new ReceiverThread();
-        receiverThread.start();
+        this.mInputStream = inputStream;
+        mReceiverThread= new ReceiverThread();
+        mReceiverThread.start();
         mContext = context;
     }
 
@@ -58,7 +58,7 @@ public class Receiver {
                 int readByte = 0;
                 StringBuilder stringBuilder = new StringBuilder();
                 try{
-                    while ((readByte = inputStream.read(buff)) > 0 ){
+                    while ((readByte = mInputStream.read(buff)) > 0 ){
                         stringBuilder.append(new String(buff, 0, readByte));
                     }
                     // 根据协议发送广播，先大概写出来，后续优化设计模式
