@@ -9,23 +9,20 @@ import org.json.JSONObject;
  * @version 1.0
  * 心跳包协议
  */
-public class HeartBeatProtocol extends BasicProtocolImp {
+public class HeartBeatProtocol implements ISendableProtocol {
 
     private final int type = 8004;
 
     @Override
-    public void transToSend() {
+    public byte[] getSendByte() {
+        byte[] sendByte = null;
         try{
             JSONObject sendData = new JSONObject();
             sendData.put("type", type);
-            toSend = sendData;
+            sendByte = sendData.toString().getBytes();
         }catch (JSONException e){
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void transToRead() {
-        // nothing
+        return sendByte;
     }
 }

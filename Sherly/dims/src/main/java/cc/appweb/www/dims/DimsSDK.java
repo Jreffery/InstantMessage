@@ -24,9 +24,10 @@ import cc.appweb.www.service.IDimsConnectInterface;
  */
 public class DimsSDK {
 
+    /** TAG **/
     private static final String TAG = "DimsSDK";
 
-    /** FLAG **/
+    /** FLAG 外部调用 **/
     public static final int REMOTE_EX = -1;                     // 远程调用失败
     public static final int CONNECT_SUCCESS = 0;               // 连接成功
     public static final int CONNECT_TIMEOUT = 1;               // 连接超时

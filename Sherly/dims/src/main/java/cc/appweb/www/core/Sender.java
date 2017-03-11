@@ -84,6 +84,7 @@ public class Sender {
                             }
                         });
                     }
+                    mMessageQueueUnInit = null;
                 }
             }
             final HeartBeatProtocol beatProtocol = new HeartBeatProtocol();
@@ -93,6 +94,7 @@ public class Sender {
                     try{
                         mOutputStream.write(beatProtocol.getSendByte());
                     }catch (IOException e){
+                        //// TODO: 2017/3/12 重连机制
                         e.printStackTrace();
                     }
                     mSenderHandler.postDelayed(this, Constant.HEART_BEAT_FREQUENCY);

@@ -55,10 +55,11 @@ public class Receiver {
             // 循环
             while (true){
                 byte[] buff = new byte[1024];
-                int readByte = 0;
+                int readByte;
                 StringBuilder stringBuilder = new StringBuilder();
                 try{
                     while ((readByte = mInputStream.read(buff)) > 0 ){
+                        //// TODO: 2017/3/12 修改判断消息分隔
                         stringBuilder.append(new String(buff, 0, readByte));
                     }
                     // 根据协议发送广播，先大概写出来，后续优化设计模式
@@ -84,6 +85,7 @@ public class Receiver {
                         // 丢弃（后续考虑加入消息推送功能）
                     }
                 }catch (IOException e){
+                    //// TODO: 2017/3/12  重连机制
                     e.printStackTrace();
                 }catch (JSONException e){
                     e.printStackTrace();

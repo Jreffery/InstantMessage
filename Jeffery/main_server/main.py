@@ -11,6 +11,6 @@ from cc.appweb.dims.factory import DimsFactory
 # 主程序，主服务器的入口
 if __name__ == '__main__':
     # 监听端口号8000，后期需可配置
-    reactor.listenTCP(8000, DimsFactory(), interface='')
+    reactor.listenTCP(8001, DimsFactory())
     # 进入事件循环
     reactor.run()
