@@ -50,44 +50,104 @@ public class Receiver {
     }
 
     class ReceiverThread extends Thread{
+        /** FLAG **/
+        private static final int FIND_START_STATUS = 1;   //  等待"#####"
+        private static final int FIND_DATA_STATUS = 2;   //  等待数据
+
+        private static final int BUFF_SIZE = 1024;   //  缓冲大小
+
+
         @Override
         public void run(){
             // 循环
+            int status = FIND_START_STATUS;
+            int dataLength = 0;
+            byte[] streamBuff = new byte[BUFF_SIZE];
+            byte[] buff = new byte[BUFF_SIZE];
+            int streamLength = 0;
+            int readByte;
+            int hadReceiveDataLength = 0;
+            StringBuilder stringBuilder = new StringBuilder();
             while (true){
-                byte[] buff = new byte[1024];
-                int readByte;
-                StringBuilder stringBuilder = new StringBuilder();
                 try{
-                    while ((readByte = mInputStream.read(buff)) > 0 ){
-                        //// TODO: 2017/3/12 修改判断消息分隔
-                        stringBuilder.append(new String(buff, 0, readByte));
+                    readByte = mInputStream.read(buff);
+                    Log.i(TAG, "readbyte = "+readByte + " " + new String(buff, 0, readByte));
+                    if(readByte == -1){
+                        // 断开了重连
+                        throw new IOException();
                     }
-                    // 根据协议发送广播，先大概写出来，后续优化设计模式
-                    JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                    int type = jsonObject.getInt("type");
-                    if(type == 7002){
-                        // 接入响应
-                        Log.i(TAG, "Connect to node server success.");
-                    }else if(type == 7003){
-                        // 发送响应
-                        Intent intent = new Intent();
-                        intent.setAction(Constant.BROADCAST_SEND_SUCCESS);   // 可能不成功
-                        intent.putExtra("msgID", jsonObject.getLong("msgID"));
-                        mContext.sendBroadcast(intent);
-                    }else if( type == 7103){
-                        // 接收消息
-                        Intent intent = new Intent();
-                        intent.setAction(Constant.BROADCAST_RECEIVE_MESSAGE);
-                        intent.putExtra("sender", jsonObject.getString("sender"));
-                        intent.putExtra("data", jsonObject.getString("data"));
-                        mContext.sendBroadcast(intent);
-                    }else{
-                        // 丢弃（后续考虑加入消息推送功能）
+                    if(status == FIND_START_STATUS){
+
+                        // 寻找
+                        int copySize = readByte > BUFF_SIZE - streamLength ? BUFF_SIZE - streamLength : readByte;
+                        System.arraycopy(buff, 0, streamBuff, streamLength, copySize);
+                        streamLength += copySize;
+                        /**
+                         *  "#####xxxxx#####"
+                         *  其中 xxxxx 第一字节为类型，一般代表字符串数据
+                         *  后四字节代表大小
+                         **/
+                        while (streamLength >= 15){
+                            for(int i=0; i<Constant.RECEIVE_BOUNDARY.length; i++){
+                                if(streamBuff[i] != Constant.RECEIVE_BOUNDARY[i] || streamBuff[i+10] !=Constant.RECEIVE_BOUNDARY[i]){
+                                    Log.i(TAG, "Receive byte failed!");
+                                    throw new IOException();
+                                }
+                            }
+                            dataLength = 0;
+                            dataLength |= (streamBuff[6] & 0xFF) << 24;
+                            dataLength |= (streamBuff[7] & 0xFF) << 16;
+                            dataLength |= (streamBuff[8] & 0xFF) << 8;
+                            dataLength |= (streamBuff[9] & 0xFF) << 0;
+
+                            stringBuilder.delete(0, stringBuilder.length());
+                            hadReceiveDataLength = 0;
+
+                            if(dataLength <= streamLength - 15){
+                                // 这里可以处理一条数据
+                                stringBuilder.append(new String(streamBuff, 15, dataLength));
+                                DimsNotifier.getInstance().notify(mContext, stringBuilder.toString());
+                                //将剩余的copy下来
+                                System.arraycopy(streamBuff, dataLength+15, streamBuff, 0, streamLength - dataLength -15);
+                                streamLength = streamLength - dataLength -15;
+                            }else {
+                                stringBuilder.append(new String(streamBuff, 15, streamLength-15));
+                                hadReceiveDataLength += streamLength-15;
+                                if(copySize < readByte){
+                                    stringBuilder.append(new String(buff,copySize,readByte-copySize));
+                                    hadReceiveDataLength += readByte-copySize;
+                                }
+                                streamLength = 0;
+                                status = FIND_DATA_STATUS;
+                            }
+                        }
+                    }else if(status == FIND_DATA_STATUS){
+                        if(readByte < dataLength - hadReceiveDataLength){
+                            stringBuilder.append(new String(buff, 0, readByte));
+                            hadReceiveDataLength += readByte;
+                        }else {
+                            // 完成一条数据
+                            stringBuilder.append(new String(buff, 0, dataLength - hadReceiveDataLength));
+                            DimsNotifier.getInstance().notify(mContext, stringBuilder.toString());
+
+                            streamLength = readByte-dataLength+hadReceiveDataLength;
+                            System.arraycopy(buff, dataLength - hadReceiveDataLength, streamBuff, 0, streamLength);
+                            status = FIND_START_STATUS;
+                        }
                     }
                 }catch (IOException e){
-                    //// TODO: 2017/3/12  重连机制
-                    e.printStackTrace();
-                }catch (JSONException e){
+                    synchronized (AccesserManager.getInstance().getSyncLock()){
+                        try{
+                            mInputStream = AccesserManager.getInstance().getReceiverInputStream(mInputStream);
+                            if(mInputStream == null){
+                                Log.i(TAG, "Network failed!");
+                                break;
+                            }
+                        }catch (IOException e1){
+                            Log.i(TAG, "Network failed!");
+                            break;
+                        }
+                    }
                     e.printStackTrace();
                 }
             }

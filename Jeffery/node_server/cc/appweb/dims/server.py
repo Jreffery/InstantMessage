@@ -7,6 +7,7 @@ Created on 2016/10/7
 
 from twisted.internet import protocol
 from abstract import ProtocolRunnable
+from cc.appweb.utils import byteEncode
 import json
 
 # 对用户服务协议
@@ -27,14 +28,16 @@ class NodeProtocol(protocol.Protocol):
         print data
         try:
             resolver = ProtocolResolver(self, data)
-            self.response = resolver.getRunnable()
-            self.response.run(self)
-            self.transport.write(self.response.getResponse())
+            if not isinstance(resolver, NoResponseService):    
+                self.response = resolver.getRunnable()
+                self.response.run(self)
+                self.transport.write(self.response.getResponse())
         except Exception, ex:
             response = {}
             response['code'] = 503
             response['errMsg'] = str(ex)
-            self.transport.write(json.dumps(response))
+            responseData = json.dumps(response)
+            self.transport.write(responseData)
 
 class NodeFactory(protocol.Factory):
     def __init__(self):
@@ -60,7 +63,7 @@ class ProtocolResolver():
         elif msg['type'] == 8003:
             self.service = TransferService(msg)
         elif msg['type'] == 8004:
-            pass
+            self.service = NoResponseService()
         else:
             raise Exception, "no such protocol"
 
@@ -78,7 +81,8 @@ class AuthService(ProtocolRunnable):
         self.response['code'] = 200
         print appid, usr, pwd
     def getResponse(self):
-        return json.dumps(self.response)
+        responseData = json.dumps(self.response)
+        return byteEncode.getMsgStart(responseData) + responseData
         
 # 转发服务
 class TransferService(ProtocolRunnable):
@@ -101,6 +105,16 @@ class TransferService(ProtocolRunnable):
             self.response['code'] = 503
         
     def getResponse(self):
-        return json.dumps(self.response)
-        
+        responseData = json.dumps(self.response)
+        return byteEncode.getMsgStart(responseData) + responseData
+
+# 不响应服务
+# 心跳
+class NoResponseService(ProtocolRunnable):
+    # nothing
+    def run(self, protocol):
+        pass
+    
+    def getResponse(self):
+        pass         
         

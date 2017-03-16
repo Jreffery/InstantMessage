@@ -80,6 +80,7 @@ public class Sender {
                                     mOutputStream.flush();
                                 }catch (IOException e){
                                     e.printStackTrace();
+                                    reAccess();
                                 }
                             }
                         });
@@ -93,9 +94,10 @@ public class Sender {
                 public void run() {
                     try{
                         mOutputStream.write(beatProtocol.getSendByte());
+                        mOutputStream.flush();
                     }catch (IOException e){
-                        //// TODO: 2017/3/12 重连机制
                         e.printStackTrace();
+                        reAccess();
                     }
                     mSenderHandler.postDelayed(this, Constant.HEART_BEAT_FREQUENCY);
                 }
@@ -122,14 +124,33 @@ public class Sender {
             mSenderHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    try{
+                    try {
                         mOutputStream.write(sendData);
                         mOutputStream.flush();
-                    }catch (IOException e){
-                        e.printStackTrace();
+                    } catch (IOException e) {
+                        reAccess();
                     }
                 }
             });
+        }
+
+        /**
+         * 重连机制
+         * */
+        private void reAccess(){
+            synchronized (AccesserManager.getInstance().getSyncLock()){
+                try{
+                    mOutputStream = AccesserManager.getInstance().getSenderOutputStream(mOutputStream);
+                    if(mOutputStream == null){
+                        Log.i(TAG, "NetWork failed!");
+                        mSenderLooper.quit();
+                    }
+                }catch (IOException e){
+                    e.printStackTrace();
+                    Log.i(TAG, "NetWork failed!");
+                    mSenderLooper.quit();
+                }
+            }
         }
     }
 }

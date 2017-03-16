@@ -11,7 +11,7 @@ from cc.appweb.dims import register, server
 if __name__ == '__main__':
     # 向主服务器注册节点服务器
     # ip端口 以后可配
-    reactor.connectTCP('192.168.1.104', 8001, register.RegisterFactory(reactor))
+    reactor.connectTCP('192.168.253.1', 8001, register.RegisterFactory(reactor))
     # 进入事件循环
     reactor.run()
     

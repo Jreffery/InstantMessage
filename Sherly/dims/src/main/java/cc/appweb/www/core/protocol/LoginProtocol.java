@@ -26,7 +26,7 @@ public class LoginProtocol implements ISendableProtocol {
             sendData.put("appid", appid);
             sendData.put("usr", usr);
             sendData.put("pwd", pwd);
-            sendByte = sendByte.toString().getBytes();
+            sendByte = sendData.toString().getBytes();
         }catch (JSONException e){
             e.printStackTrace();
         }

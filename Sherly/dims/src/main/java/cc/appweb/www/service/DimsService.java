@@ -17,6 +17,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import cc.appweb.www.Constant;
+import cc.appweb.www.core.AccesserManager;
 import cc.appweb.www.core.Receiver;
 import cc.appweb.www.core.Sender;
 import cc.appweb.www.core.protocol.AccessServiceProtocol;
@@ -84,79 +85,16 @@ public class DimsService extends Service {
         @Override
         public int connectToDims(String appId, String usr, String pwd){
             Log.i(TAG, "DimsService.connectToDims");
-            int resultFlag = CONNECT_SUCCESS;
-            JSONObject mainServiceResult = null;
-            BufferedOutputStream mainServerOutput;
-            BufferedInputStream mainServerInput;
-            AccessServiceProtocol mainServerProtocol =  new AccessServiceProtocol();
-            int responseCode = 0;
-            StringBuilder mainServerBuilder = new StringBuilder();
-            // 主服务器连接发送读取相关
-            try {
-                // 连接核心
-                Socket accessServiceSocket = new Socket(Constant.serverIP, Constant.serverPort);
-                mainServerOutput = new BufferedOutputStream(accessServiceSocket.getOutputStream());
-                mainServerInput = new BufferedInputStream(accessServiceSocket.getInputStream());
-
-                mainServerProtocol.appid = appId;
-                mainServerProtocol.usr = usr;
-                mainServerProtocol.pwd = pwd;
-
-                // 发送接入请求
-                mainServerOutput.write(mainServerProtocol.getSendByte());
-                mainServerOutput.flush();
-                // 接收响应
-                byte[] buff = new byte[1024];
-                int readByte = 0;
-                while ((readByte = mainServerInput.read(buff)) > 0) {
-                    mainServerBuilder.append(new String(buff, 0, readByte));
-                }
-                mainServerInput.close();
-                mainServerOutput.close();
-            }catch (UnknownHostException e){
-                e.printStackTrace();
-                resultFlag = CONNECT_SERVER_FAILED;
-            }catch (IOException e){
-                e.printStackTrace();
-                resultFlag = CONNECT_TIMEOUT;
-                return resultFlag;
+            AccesserManager accesserManager = AccesserManager.getInstance();
+            accesserManager.initAppAndUser(appId, usr, pwd);
+            int flag = accesserManager.initNodeServerInfo();
+            if(flag != CONNECT_SUCCESS){
+                return flag;
             }
 
-            // 解析协议
             try{
-                mainServiceResult = (JSONObject) mainServerProtocol.getReceiveData(mainServerBuilder.toString());
-                responseCode = mainServiceResult.getInt("code");
-                if( responseCode == 200){
-
-                }else if(responseCode == 500){
-                    resultFlag = CONNECT_CHECK_USER_FAILED;
-                }else if(responseCode == 503){
-                    resultFlag = CONNECT_SERVER_FAILED;
-                }else if(responseCode == 504){
-                    resultFlag = CONNECT_CHECK_APP_FAILED;
-                }else {
-                    resultFlag = CONNECT_UNKNOWN_FAILED;
-                }
-            }catch (JSONException e){
-                e.printStackTrace();
-                resultFlag = CONNECT_SERVER_FAILED;
-            }finally {
-                if(responseCode != 200){
-                    return resultFlag;
-                }
-            }
-
-            // 节点服务器连接并登录
-            try{
-                String nodeInfo = mainServiceResult.getString("nodeMsg");
-                int boundary = nodeInfo.indexOf('-');
-                String nodeIp = nodeInfo.substring(0, boundary);
-                int nodePort = Integer.parseInt(nodeInfo.substring(boundary+1, nodeInfo.length()));
-                // 发起节点服务器连接
-                Socket nodeSocket = new Socket(nodeIp, nodePort);
-                // 启动sender 和  receiver
-                mSender = Sender.getSenderInstance(nodeSocket.getOutputStream());
-                mReceiver = Receiver.getReceiverInstance(mContext, nodeSocket.getInputStream());
+                mSender = Sender.getSenderInstance(accesserManager.getSenderOutputStream(null));
+                mReceiver = Receiver.getReceiverInstance(mContext, accesserManager.getReceiverInputStream(null));
 
                 LoginProtocol loginProtocol = new LoginProtocol();
                 loginProtocol.appid = appId;
@@ -164,15 +102,10 @@ public class DimsService extends Service {
                 loginProtocol.pwd = pwd;
 
                 mSender.send(loginProtocol.getSendByte());
-            }catch (JSONException e){
-                e.printStackTrace();
-                resultFlag = CONNECT_SERVER_FAILED;
+                return CONNECT_SUCCESS;
             }catch (IOException e){
-                e.printStackTrace();
-                resultFlag = CONNECT_NODE_SERVER_FAILED;
+                return CONNECT_NODE_SERVER_FAILED;
             }
-
-            return resultFlag;
         }
     }
 }

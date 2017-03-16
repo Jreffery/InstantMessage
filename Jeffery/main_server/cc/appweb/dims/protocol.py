@@ -28,6 +28,7 @@ class DimsProtocol(protocol.Protocol):
             self.response = resolver.getRunnable()              # 接收请求后执行
             self.response.run()                              
             self.transport.write(self.response.getResponse())   # 接收请求后需要响应的
+            self.transport.loseConnection()
         
         # 异常捕获
         except Exception, ex:
