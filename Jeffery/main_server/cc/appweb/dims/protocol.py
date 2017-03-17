@@ -10,15 +10,18 @@ import json
 
 class DimsProtocol(protocol.Protocol):
     
+    isNode = False              # 是否节点服务器            
+    
     # 初始化构造函数
     def __init__(self, factory, addr):
-        self.addr = addr                      # 连接方的地址
+        # ip地址、端口
+        self.host = addr.host
+        self.keepport = addr.port
         self.factory = factory                # 生成协议的工厂
     
     # 创建连接时调用
     def connectionMade(self):
-        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' connected.'
-        self.factory.numConnection += 1;      # 连接数    
+        print 'Connection ' + self.host + ':' + str(self.keepport) + ' connected!' 
         
     # 接收数据时调用
     def dataReceived(self, data):
@@ -26,10 +29,12 @@ class DimsProtocol(protocol.Protocol):
         try:
             resolver = ProtocolResolver(self, data)             # 根据协议解析数据
             self.response = resolver.getRunnable()              # 接收请求后执行
-            self.response.run()                              
-            self.transport.write(self.response.getResponse())   # 接收请求后需要响应的
-            self.transport.loseConnection()
-        
+            self.response.run()
+            responseData = self.response.getResponse()
+            if not responseData == None:              
+                self.transport.write(self.response.getResponse())   # 接收请求后需要响应的
+            self.response.afterResponse()
+            
         # 异常捕获
         except Exception, ex:
             response = {}
@@ -39,14 +44,16 @@ class DimsProtocol(protocol.Protocol):
     
     # 连接断开时调用        
     def connectionLost(self, reason=protocol.connectionDone):
-        print 'Connection ' + self.addr.host + ':' + str(self.addr.port) + ' lost.'
-        self.factory.numConnection -= 1
+        print 'Connection ' + self.host + ':' + str(self.keepport) + ' lost.'
+        # 如果是节点服务器，则从服务集群中删除该服务器
+        if self.isNode:
+            self.factory.removeNode(self)
         
 # 协议的解析者
 # 对json数据中的请求码作一层解析
 class ProtocolResolver():
-    def __init__(self, dimsprotocol, data):
-        self.dims = dimsprotocol              # 协议
+    def __init__(self, protocol, data):
+        self.protocol = protocol              # 协议
         self.data = data                      # 数据
         self.resolveMsg()                     # 解析协议
         
@@ -57,11 +64,21 @@ class ProtocolResolver():
     def resolveMsg(self):
         msg = json.loads(self.data)
         if msg['type'] == 8000:
-            self.dims.port = msg['port']
-            self.service = JoinService(self.dims)
+            self.protocol.port = msg['port']
+            self.service = JoinService(self.protocol)
         elif msg['type'] == 8001:
             appid = msg['appid']
-            self.service = AccessService(self.dims, appid)
+            self.service = AccessService(self.protocol, appid)
+        elif msg['type'] == 8010:
+            usr = msg['usr']
+            appid = msg['appid']
+            self.service = UpdateUserNodeMapService(self.protocol, usr, appid, True)
+        elif msg['type'] == 8011:
+            usr = msg['usr']
+            appid = msg['appid']
+            self.service = UpdateUserNodeMapService(self.protocol, usr, appid, False)
+        elif msg['type'] == 8020:
+            self.service = MainTransferService(msg, self.protocol)
         else:
             raise Exception, "no such protocol"
 
@@ -71,45 +88,89 @@ class ProtocolResolver():
     
 # 具体服务定义 --加入节点服务   
 class JoinService(ProtocolRunnable):
-    def __init__(self, dims):
-        self.dims = dims
+    def __init__(self, protocol):
+        self.protocol = protocol
     def run(self):
-        key = self.dims.addr.host + '-' + str(self.dims.port)   # 127.0.0.1-8010
-        self.dims.factory.nodeConnections[key] = 0
+        self.protocol.isNode = True
+        self.protocol.factory.addNode(self.protocol)
+        self.protocol.userCount = 0
         self.response={}
+        self.response['type'] = 7000
         self.response['code']=200
     def getResponse(self):
         return json.dumps(self.response)
+    
+    def afterResponse(self):
+        pass
+
 
 # 具体服务定义 -- 接入用户服务  
 class AccessService(ProtocolRunnable):
-    def __init__(self, dims, appid):
-        self.appid = appid
-        self.dims = dims
+    def __init__(self, protocol, appId):
+        self.appId = appId
+        self.protocol = protocol
         
     def run(self):
-        appidDict = self.dims.factory.appidConnections
-        connectionDict = self.dims.factory.nodeConnections
+        nodeInfo = self.protocol.factory.dispatch(self.appId)
         self.response = {}
-        if appidDict.has_key(self.appid):
-            self.response['code'] = 200
-            self.response['nodeMsg'] = appidDict[self.appid]
+        if nodeInfo == None:
+            self.response['code'] = 503
         else:
-            mMin = 10000000         # INF
-            mkey = None
-            for key in connectionDict:
-                if mMin >= connectionDict[key]:
-                    mMin = connectionDict[key]
-                    mkey = key       
-            # 如果找不到合适的节点服务器（节点服务器连接数过多）
-            if mkey is None:
-                self.response['code'] = 503
-            else:
-                self.response['code'] = 200
-                self.response['nodeMsg'] = mkey
+            self.response['code'] = 200
+            self.response['nodeMsg'] = nodeInfo
         
     def getResponse(self):
         return json.dumps(self.response)
 
+    def afterResponse(self):
+        self.protocol.transport.loseConnection()        #对用户来说，响应完就断开连接
 
-
+# 更新用户--nodeMap
+class UpdateUserNodeMapService(ProtocolRunnable):
+    def __init__(self, protocol, usr, appid, flag):
+        self.protocol = protocol
+        self.usr = usr
+        self.appid = appid
+        self.flag = flag
+        
+    def run(self):
+        self.protocol.factory.updateUserNodeMap(self.appid+'-'+self.usr, self.protocol, self.flag)
+        
+    def getResponse(self):
+        pass
+    
+    def afterResponse(self):
+        pass
+        
+# 主服务器的转发服务
+class MainTransferService(ProtocolRunnable):
+    def __init__(self, data, protocol):
+        self.data = data
+        self.protocol = protocol
+        
+    def run(self):
+        self.recevier = self.data['receiver']
+        self.appid = self.data['appid']
+        self.msg = self.data['data']
+        self.sender = self.data['sender']
+        # 先检查用户是否在线
+        self.targetProtocol = self.protocol.factory.findNodeWithUser(self.appid+'-'+self.recevier)
+        
+    def getResponse(self):
+        return None
+    
+    def afterResponse(self):
+        if self.targetProtocol == None:
+            # 按道理这里应该是缓存起来
+            # 等具体用户上线后推送给它
+            # 这里先暂时不要处理
+            pass
+        else:
+            responseData = {}
+            responseData['type'] = 7020
+            responseData['receiver'] = self.recevier
+            responseData['appid'] = self.appid
+            responseData['data'] = self.msg
+            responseData['sender'] = self.sender
+            self.targetProtocol.transport.write(json.dumps(responseData))  #转发
+            

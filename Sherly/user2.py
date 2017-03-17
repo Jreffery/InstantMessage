@@ -3,11 +3,11 @@
   
 import socket, json  
   
-address = ('127.0.0.1', 8000)  
+address = ('127.0.0.1', 8001)  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
 s.connect(address)  
 
-s.send('{"type":8001,"appid":"1111111111111111","usr":"ranscey","pwd":"xxxxxx"}')  
+s.send('{"type":8001,"appid":"111111111111111a","usr":"ranscey","pwd":"xxxxxx"}')  
   
 data = s.recv(512)  
 print 'the data received is', data  
@@ -20,7 +20,7 @@ if rep['code'] == 200:
 	address = (host,port)
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
 	s.connect(address)
-	s.send('{"type":8002,"appid":"1111111111111111","usr":"ranscey","pwd":"xxxxxx"}')  
+	s.send('{"type":8002,"appid":"111111111111111a","usr":"ranscey","pwd":"xxxxxx"}')  
 	data = s.recv(512)  
 	print 'the data received is', data   
 

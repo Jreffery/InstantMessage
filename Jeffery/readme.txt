@@ -9,6 +9,7 @@ Jeffery's folder
 
 //响应
 {
+	"type":7000,
 	"code":200,          //200成功，503错误
 	"errMsg":null        //返回信息，如果有
 }
@@ -67,6 +68,27 @@ Jeffery's folder
 	'sender':'xxxxxxxxx'
 }
 
+//------节点服务器发送转发消息给主服务器----
+//发送者
+{
+	'type':8020,
+	'receiver':'xxxxxxxx',
+	'appid':'xxxxxxxx',
+	'data':'xxxxxxxx',
+	'sender':'xxxxxxxxx'
+}
+//响应无响应
+
+// ----主服务器发送转发消息给节点服务器
+{
+	'type':7020,
+	'receiver':'xxxxxxxx',
+	'appid':'xxxxxxxx',
+	'data':'xxxxxxxx',
+	'sender':'xxxxxxxxx'
+}
+
+
 
 //------------心跳包--------------
 //发送者，每隔10秒触发一次
@@ -75,6 +97,25 @@ Jeffery's folder
 }
 // 服务端不响应
 
+
+//---------节点服务器向主服务器提交新增用户-----
+// 发送方
+{
+	'type':8010,
+	'usr':'xxxxxxxx',
+	'appid':'xxxxxxxxxxxx'
+}
+// 响应
+--无响应
+
+//---------节点服务器向主服务器提交下线用户-----
+{
+	'type':8011,
+	'usr':'xxxxxxxx',
+	'appid':'xxxxxxxxxxxx'
+}
+// 响应
+--无响应
 
 
 

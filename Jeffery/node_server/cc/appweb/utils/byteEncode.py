@@ -28,11 +28,11 @@ for str in strByte:
 
 def getMsgStart(data):
     dataLength = len(data)
-    code = startEncode(dataLength)
+    code = __startEncode(dataLength)
     return '#####' + code + '#####'
     
     
-def startEncode(length):
+def __startEncode(length):
     code  = '\x00'             #代表数据为字符串 
     code  += strIntList[(length >> 24) & 0xff]
     code  += strIntList[(length >> 16) & 0xff]

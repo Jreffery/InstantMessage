@@ -12,3 +12,7 @@ class ProtocolRunnable():
     # 协议数据的返回
     def getResponse(self):
         pass
+    
+    # 响应完需要完成的工作
+    def afterResponse(self):
+        pass

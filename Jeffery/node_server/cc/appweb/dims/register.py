@@ -5,7 +5,8 @@ Created on 2016/10/6
 @author: Jeffery
 '''
 from twisted.internet import protocol
-import json, server
+from server import NodeFactory
+import json, random
 
 # 注册者协议
 class RegisterProtocol(protocol.Protocol):
@@ -25,35 +26,49 @@ class RegisterFactory(protocol.ClientFactory):
         
     def buildProtocol(self, addr):
         # 注册协议
-        return RegisterProtocol(RegisterWorker())
+        return RegisterProtocol(RegisterWorker(self.reactor))
 
     # 连接失败
     def clientConnectionFailed(self, connector, reason):
-        print 'Connection failed:', reason.getErrorMessage()
+        print 'Connection failed: ' + reason.getErrorMessage()
         
     # 断开连接    
     def clientConnectionLost(self, connector, reason):
-        print "Run Server"
-        # 启动服务
-        self.reactor.listenTCP(8010, server.NodeFactory(), interface='')
+        print 'Connection lost: ' + reason.getErrorMessage()
     
 # 注册工人--真正执行注册的核心    
 class RegisterWorker():
+    listenPort = random.randint(0, 20) + 8002
+    
+    def __init__(self, reactor):
+        self.reactor = reactor
+        
     def run(self, protocol):
-        # json协议，端口可配
+        self.protocol = protocol
         regMsg = {}
         regMsg['type'] = 8000
-        regMsg['port'] = 8010
-        protocol.transport.write(json.dumps(regMsg))
+        regMsg['port'] = self.listenPort
+        self.protocol.transport.write(json.dumps(regMsg))
     
-    # 执行    
+    # 处理数据   
     def handle(self, protocol, data):
         print data
         resMsg = json.loads(data)
-        if resMsg['code'] == 200:
-            # 成功后断开连接
-            protocol.transport.loseConnection()
-
-        else:
-            print resMsg['errMsg']
+        if resMsg['type'] == 7000:
+            # 加入服务的响应
+            if resMsg['code'] == 200:
+                print 'Dims Node server run!'
+                self.nodeFactory = NodeFactory(self.protocol)
+                self.reactor.listenTCP(self.listenPort, self.nodeFactory)
+            else:
+                print resMsg['errMsg']
+        if resMsg['type'] == 7020:
+            appid = resMsg['appid']
+            usr = resMsg['receiver']
+            transferData = {}
+            transferData['type'] = 7103
+            transferData['data'] = resMsg['data']
+            transferData['sender'] = resMsg['sender']
+            self.nodeFactory.postMsgToUser(appid, usr, json.dumps(transferData))
+            
             

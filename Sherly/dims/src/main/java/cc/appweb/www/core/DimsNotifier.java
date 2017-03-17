@@ -51,6 +51,7 @@ public class DimsNotifier {
                 intent.setAction(Constant.BROADCAST_RECEIVE_MESSAGE);
                 intent.putExtra("sender", jsonObject.getString("sender"));
                 intent.putExtra("data", jsonObject.getString("data"));
+                Log.i(TAG, "收到消息：" + jsonObject.getString("data"));
                 context.sendBroadcast(intent);
             }else{
                 // 丢弃（后续考虑加入消息推送功能）

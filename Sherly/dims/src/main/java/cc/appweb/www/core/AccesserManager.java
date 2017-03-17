@@ -1,5 +1,7 @@
 package cc.appweb.www.core;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,6 +25,8 @@ import cc.appweb.www.service.DimsService;
  */
 public class AccesserManager {
 
+    /** TAG **/
+    private static final String TAG = "AccesserManager";
     /** 单例 **/
     private static AccesserManager ourInstance = new AccesserManager();
     /** 重设节点服务器周期 **/
@@ -112,6 +116,7 @@ public class AccesserManager {
             resultFlag = DimsService.CONNECT_TIMEOUT;
             return resultFlag;
         }
+        Log.i(TAG, "Main Server response = "+mainServerBuilder.toString());
         // 解析协议
         try{
             mainServiceResult = (JSONObject) mainServerProtocol.getReceiveData(mainServerBuilder.toString());

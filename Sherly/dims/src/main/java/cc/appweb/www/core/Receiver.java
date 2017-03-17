@@ -1,11 +1,8 @@
 package cc.appweb.www.core;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,7 +68,6 @@ public class Receiver {
             while (true){
                 try{
                     readByte = mInputStream.read(buff);
-                    Log.i(TAG, "readbyte = "+readByte + " " + new String(buff, 0, readByte));
                     if(readByte == -1){
                         // 断开了重连
                         throw new IOException();
