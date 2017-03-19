@@ -1,0 +1,5 @@
+{
+	"mainserverip":"192.168.253.1",
+	"mainserverport":8001,
+	"nodeserverport":8002
+}

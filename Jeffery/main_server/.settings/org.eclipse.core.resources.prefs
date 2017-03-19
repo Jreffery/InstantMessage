@@ -2,4 +2,5 @@ eclipse.preferences.version=1
 encoding//cc/appweb/dims/abstract.py=utf-8
 encoding//cc/appweb/dims/factory.py=utf-8
 encoding//cc/appweb/dims/protocol.py=utf-8
+encoding//cc/appweb/utils/configure.py=utf-8
 encoding/main.py=utf-8

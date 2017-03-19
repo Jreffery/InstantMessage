@@ -6,6 +6,7 @@ Created on 2016/10/6
 '''
 from twisted.internet import protocol
 from server import NodeFactory
+from cc.appweb.utils.configure import config
 import json, random
 
 # 注册者协议
@@ -38,7 +39,7 @@ class RegisterFactory(protocol.ClientFactory):
     
 # 注册工人--真正执行注册的核心    
 class RegisterWorker():
-    listenPort = random.randint(0, 20) + 8002
+    listenPort = config.nodeServerPort
     
     def __init__(self, reactor):
         self.reactor = reactor
