@@ -53,6 +53,8 @@ public class Receiver {
         private Looper mReceiverLooper = null;
         /** 接收工作的处理者 **/
         private Handler mReceiverHandler = null;
+        /** 输出流的变化次数 **/
+        private int mReTime;
 
         int status = FIND_START_STATUS;
         int dataLength = 0;
@@ -74,6 +76,7 @@ public class Receiver {
                 public void run() {
                     try{
                         synchronized (AccesserManager.getInstance().inputLock){
+                            mReTime = AccesserManager.getInstance().getmReAccessTime();
                             readByte = AccesserManager.getInstance().getInputStream().read(buff);
                         }
                         if(readByte == -1){
@@ -141,7 +144,7 @@ public class Receiver {
                         }
                     }catch (IOException e){
                         e.printStackTrace();
-                        if(AccesserManager.getInstance().reConnected() == 0){
+                        if(AccesserManager.getInstance().reConnected(mReTime) == 0){
                             reAccess();
                         }else {
                             mReceiverLooper.quit();
@@ -158,6 +161,11 @@ public class Receiver {
          * */
         public void reAccess(){
             // nothing
+            status = FIND_START_STATUS;
+            dataLength = 0;
+            streamLength = 0;
+            hadReceiveDataLength = 0;
+            stringBuilder.delete(0,stringBuilder.length());
         }
     }
 }

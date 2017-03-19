@@ -65,18 +65,21 @@ public class Sender {
         boolean mIsPostToSend = false;
         /** 心跳包 **/
         final byte[] mHeartByte = new HeartBeatProtocol().getSendByte();
+        /** 输出流的变化次数 **/
+        private int mReTime;
         /** 发送心跳包**/
         private final Runnable mHeartRun = new Runnable() {
             @Override
             public void run() {
                 try{
                     synchronized (AccesserManager.getInstance().outputLock){
+                        mReTime = AccesserManager.getInstance().getmReAccessTime();
                         AccesserManager.getInstance().getOutputStream().write(mHeartByte);
                         AccesserManager.getInstance().getOutputStream().flush();
                     }
                 }catch (IOException e){
                     e.printStackTrace();
-                    if(AccesserManager.getInstance().reConnected() == 0){
+                    if(AccesserManager.getInstance().reConnected(mReTime) == 0){
                         reAccess();
                     }else {
                         mSenderLooper.quit();
@@ -94,6 +97,7 @@ public class Sender {
                     for (int i=0;i<mMsgQ.size();i++){
                         try{
                             synchronized (AccesserManager.getInstance().outputLock){
+                                mReTime = AccesserManager.getInstance().getmReAccessTime();
                                 AccesserManager.getInstance().getOutputStream().write(mMsgQ.get(i));
                                 AccesserManager.getInstance().getOutputStream().flush();
                             }
@@ -104,7 +108,7 @@ public class Sender {
                                 mMsgQ.remove(j);
                             }
                             // 需要重连
-                            if(AccesserManager.getInstance().reConnected() == 0){
+                            if(AccesserManager.getInstance().reConnected(mReTime) == 0){
                                 reAccess();
                             }else {
                                 mSenderLooper.quit();

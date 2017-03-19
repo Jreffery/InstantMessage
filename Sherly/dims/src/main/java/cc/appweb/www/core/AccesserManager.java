@@ -171,6 +171,7 @@ public class AccesserManager {
      * 重设输入输出流
      * */
     private int setNewStream() {
+        mReAccessTime ++;
         if (!isNetworkAvailable()){
             DimsNotifier.getInstance().serverDown(mContext);
             return -1;
@@ -186,7 +187,6 @@ public class AccesserManager {
             // 没流量
             // 信号不好
             // 没开网络
-            mReAccessTime ++;
             if(mReAccessTime % reSetFrequency == 0){
                 int flag = initNodeServerInfo();
                 if(flag == DimsService.CONNECT_SUCCESS){
@@ -254,9 +254,12 @@ public class AccesserManager {
     /**
      * 发送者或者接收者触发的需要重连机制
      * */
-    public int reConnected(){
+    public int reConnected(int exTime){
         synchronized (outputLock){
             synchronized (inputLock){
+                if(exTime != mReAccessTime){
+                    return 0;
+                }
                 try {
                     mNodeOutput.close();
                 }catch (IOException e){
@@ -270,6 +273,10 @@ public class AccesserManager {
                 return setNewStream();
             }
         }
+    }
+
+    public synchronized int getmReAccessTime(){
+        return mReAccessTime;
     }
 
 }
