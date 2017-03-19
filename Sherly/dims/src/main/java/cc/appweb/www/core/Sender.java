@@ -76,8 +76,11 @@ public class Sender {
                     }
                 }catch (IOException e){
                     e.printStackTrace();
-                    AccesserManager.getInstance().reConnected();
-                    reAccess();
+                    if(AccesserManager.getInstance().reConnected() == 0){
+                        reAccess();
+                    }else {
+                        mSenderLooper.quit();
+                    }
                 }
                 mSenderHandler.postDelayed(this, Constant.HEART_BEAT_FREQUENCY);
             }
@@ -101,8 +104,11 @@ public class Sender {
                                 mMsgQ.remove(j);
                             }
                             // 需要重连
-                            AccesserManager.getInstance().reConnected();
-                            reAccess();
+                            if(AccesserManager.getInstance().reConnected() == 0){
+                                reAccess();
+                            }else {
+                                mSenderLooper.quit();
+                            }
                             return;
                         }
                     }

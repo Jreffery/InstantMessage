@@ -1,6 +1,8 @@
 package cc.appweb.www.core;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -168,7 +170,11 @@ public class AccesserManager {
     /**
      * 重设输入输出流
      * */
-    private void setNewStream() {
+    private int setNewStream() {
+        if (!isNetworkAvailable()){
+            DimsNotifier.getInstance().serverDown(mContext);
+            return -1;
+        }
         try{
             mNodeSocket = new Socket(mNodeServerIpAddr, mNodeServerPort);
             mNodeInput = mNodeSocket.getInputStream();
@@ -177,15 +183,39 @@ public class AccesserManager {
             // dns出问题，由于现在用的是ip，应该不会出问题
         }catch (IOException e){
             // 无法连接
+            // 没流量
+            // 信号不好
+            // 没开网络
             mReAccessTime ++;
             if(mReAccessTime % reSetFrequency == 0){
                 int flag = initNodeServerInfo();
                 if(flag == DimsService.CONNECT_SUCCESS){
                     // 服务失败
+                    DimsNotifier.getInstance().serverDown(mContext);
+                    return -1;
                 }
             }
-            setNewStream();
+            return setNewStream();
         }
+        return 0;
+    }
+
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivity = (ConnectivityManager) mContext
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null) {
+            NetworkInfo info = connectivity.getActiveNetworkInfo();
+            if (info != null && info.isConnected())
+            {
+                // 当前网络是连接的
+                if (info.getState() == NetworkInfo.State.CONNECTED)
+                {
+                    // 当前所连接的网络可用
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -193,11 +223,12 @@ public class AccesserManager {
      * */
     public void start(){
         //初始化socket
-        setNewStream();
-        // 获取sender和receiver即可
-        mSender = Sender.getSenderInstance();
-        mReceiver = Receiver.getReceiverInstance(mContext);
-        mSender.send(getLoginByte());
+        if(setNewStream()== 0){
+            // 获取sender和receiver即可
+            mSender = Sender.getSenderInstance();
+            mReceiver = Receiver.getReceiverInstance(mContext);
+            mSender.send(getLoginByte());
+        }
     }
 
     /**
@@ -223,7 +254,7 @@ public class AccesserManager {
     /**
      * 发送者或者接收者触发的需要重连机制
      * */
-    public void reConnected(){
+    public int reConnected(){
         synchronized (outputLock){
             synchronized (inputLock){
                 try {
@@ -236,7 +267,7 @@ public class AccesserManager {
                 }catch (IOException e){
                     e.printStackTrace();
                 }
-                setNewStream();
+                return setNewStream();
             }
         }
     }

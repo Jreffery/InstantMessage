@@ -21,6 +21,8 @@ public class Constant {
     public static final String BROADCAST_SEND_SUCCESS = "cc.appweb.www.dims.SEND_SUCCESS";
     /** 接收到消息的广播 **/
     public static final String BROADCAST_RECEIVE_MESSAGE = "cc.appweb.www.dims.RECEIVE_MESSAGE";
+    /** server down掉 **/
+    public static final String BROADCAST_RECEIVE_SERVER_DOWN = "cc.appweb.www.dims.SERVER_DOWN";
     /** 接收协议的分隔符 **/
     public static byte[] RECEIVE_BOUNDARY = "#####".getBytes();
 

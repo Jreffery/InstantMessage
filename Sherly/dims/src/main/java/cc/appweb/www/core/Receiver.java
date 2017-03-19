@@ -141,8 +141,11 @@ public class Receiver {
                         }
                     }catch (IOException e){
                         e.printStackTrace();
-                        AccesserManager.getInstance().reConnected();
-                        reAccess();
+                        if(AccesserManager.getInstance().reConnected() == 0){
+                            reAccess();
+                        }else {
+                            mReceiverLooper.quit();
+                        }
                     }
                     mReceiverHandler.post(this);
                 }

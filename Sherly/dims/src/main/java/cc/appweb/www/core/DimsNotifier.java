@@ -63,4 +63,10 @@ public class DimsNotifier {
             e.printStackTrace();
         }
     }
+
+    public void serverDown(Context context){
+        Intent intent = new Intent();
+        intent.setAction(Constant.BROADCAST_RECEIVE_SERVER_DOWN);
+        context.sendBroadcast(intent);
+    }
 }
