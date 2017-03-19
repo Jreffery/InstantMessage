@@ -36,14 +36,14 @@ class NodeProtocol(protocol.Protocol):
             self.response.run()
             responseData = self.response.getResponse()
             if not responseData == None:              
-                self.transport.write(self.response.getResponse())   # 接收请求后需要响应的
+                self.transport.write(responseData)   # 接收请求后需要响应的
             self.response.afterResponse()    
         except Exception, ex:
             response = {}
             response['code'] = 503
             response['errMsg'] = str(ex)
             responseData = json.dumps(response)
-            self.transport.write(responseData)
+            self.transport.write(byteEncode.getMsgStart(responseData) + responseData)
 
 
 class NodeFactory(protocol.Factory):

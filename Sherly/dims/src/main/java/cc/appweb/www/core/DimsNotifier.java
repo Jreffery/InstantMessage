@@ -39,6 +39,9 @@ public class DimsNotifier {
             if(type == 7002){
                 // 接入响应
                 Log.i(TAG, "Connect to node server success.");
+                Intent intent = new Intent();
+                intent.setAction(Constant.BROADCAST_LOGIN_SUCCESS);   // 可能不成功
+                context.sendBroadcast(intent);
             }else if(type == 7003){
                 // 发送响应
                 Intent intent = new Intent();

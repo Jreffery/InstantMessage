@@ -45,10 +45,6 @@ public class DimsService extends Service {
     private DimsServiceImp mBinder = new DimsServiceImp();
     /** Context应用 **/
     Context mContext = null;
-    /** sender实例 **/
-    private Sender mSender = null;
-    /** receiver **/
-    private Receiver mReceiver = null;
 
     @Override
     public void onCreate(){
@@ -76,7 +72,7 @@ public class DimsService extends Service {
             protocol.receiver = receiver;
             protocol.data = data;
             protocol.msgID = msgID;
-            mSender.send(protocol.getSendByte());
+            AccesserManager.getInstance().send(protocol.getSendByte());
         }
 
         /**
@@ -86,26 +82,15 @@ public class DimsService extends Service {
         public int connectToDims(String appId, String usr, String pwd){
             Log.i(TAG, "DimsService.connectToDims");
             AccesserManager accesserManager = AccesserManager.getInstance();
+            accesserManager.setContext(DimsService.this);
             accesserManager.initAppAndUser(appId, usr, pwd);
             int flag = accesserManager.initNodeServerInfo();
             if(flag != CONNECT_SUCCESS){
                 return flag;
             }
 
-            try{
-                mSender = Sender.getSenderInstance(accesserManager.getSenderOutputStream(null));
-                mReceiver = Receiver.getReceiverInstance(mContext, accesserManager.getReceiverInputStream(null));
-
-                LoginProtocol loginProtocol = new LoginProtocol();
-                loginProtocol.appid = appId;
-                loginProtocol.usr = usr;
-                loginProtocol.pwd = pwd;
-
-                mSender.send(loginProtocol.getSendByte());
-                return CONNECT_SUCCESS;
-            }catch (IOException e){
-                return CONNECT_NODE_SERVER_FAILED;
-            }
+            AccesserManager.getInstance().start();
+            return CONNECT_SUCCESS;
         }
     }
 }

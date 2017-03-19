@@ -1,5 +1,6 @@
 package cc.appweb.www.core;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -15,6 +16,8 @@ import java.net.UnknownHostException;
 
 import cc.appweb.www.Constant;
 import cc.appweb.www.core.protocol.AccessServiceProtocol;
+import cc.appweb.www.core.protocol.ISendableProtocol;
+import cc.appweb.www.core.protocol.LoginProtocol;
 import cc.appweb.www.service.DimsService;
 
 /**
@@ -27,12 +30,12 @@ public class AccesserManager {
 
     /** TAG **/
     private static final String TAG = "AccesserManager";
+    /**Context**/
+    private Context mContext;
     /** 单例 **/
     private static AccesserManager ourInstance = new AccesserManager();
     /** 重设节点服务器周期 **/
-    private static int reSetFrequency = 20;
-    /** 同步锁对象 **/
-    private SyncLock mSyncLock = new SyncLock();
+    private static int reSetFrequency = 20;;
     /** 主服务器ip地址 **/
     private String mMainServerIpAddr = Constant.serverIP;
     /** 主服务器port端口号 **/
@@ -49,13 +52,19 @@ public class AccesserManager {
     private InputStream mNodeInput = null;
     /**重连次数**/
     private int mReAccessTime = 0;
-
     /** appid **/
     private String mAppId;
     /** username **/
     private String mUserName;
     /** pwd **/
     private String mPwd;
+    /** 登录协议 **/
+    private LoginProtocol loginProtocol;
+
+    /** 发送者 **/
+    private Sender mSender;
+    /** 接收者 **/
+    private Receiver mReceiver;
 
 
     public static AccesserManager getInstance() {
@@ -65,6 +74,10 @@ public class AccesserManager {
     private AccesserManager() {
     }
 
+    public void setContext(Context context){
+        mContext = context;
+    }
+
     /**
      * 初始化用户信息
      * */
@@ -72,6 +85,14 @@ public class AccesserManager {
         mAppId = appId;
         mUserName = userName;
         mPwd = pwd;
+        loginProtocol = new LoginProtocol();
+        loginProtocol.appid = appId;
+        loginProtocol.usr = userName;
+        loginProtocol.pwd = pwd;
+    }
+
+    public byte[] getLoginByte(){
+        return loginProtocol.getSendByte();
     }
 
     /**
@@ -116,7 +137,7 @@ public class AccesserManager {
             resultFlag = DimsService.CONNECT_TIMEOUT;
             return resultFlag;
         }
-        Log.i(TAG, "Main Server response = "+mainServerBuilder.toString());
+        Log.i(TAG, "Main Server response = " + mainServerBuilder.toString());
         // 解析协议
         try{
             mainServiceResult = (JSONObject) mainServerProtocol.getReceiveData(mainServerBuilder.toString());
@@ -145,69 +166,79 @@ public class AccesserManager {
     }
 
     /**
-     * 返回接收者输入流
-     * 该函数不考虑同步
-     * **/
-    public InputStream getReceiverInputStream(InputStream oldInput) throws IOException{
-        if(mNodeSocket == null){
+     * 重设输入输出流
+     * */
+    private void setNewStream() {
+        try{
             mNodeSocket = new Socket(mNodeServerIpAddr, mNodeServerPort);
             mNodeInput = mNodeSocket.getInputStream();
             mNodeOutput = mNodeSocket.getOutputStream();
-        }
-        if(oldInput == null || oldInput != mNodeInput){
-            return mNodeInput;
-        }
-        mReAccessTime ++ ;
-        if(mReAccessTime % reSetFrequency == 0){
-            //重设节点服务器
-            int flag = initNodeServerInfo();
-            if(flag != DimsService.CONNECT_SUCCESS){
-                return null;
+        }catch (UnknownHostException e){
+            // dns出问题，由于现在用的是ip，应该不会出问题
+        }catch (IOException e){
+            // 无法连接
+            mReAccessTime ++;
+            if(mReAccessTime % reSetFrequency == 0){
+                int flag = initNodeServerInfo();
+                if(flag == DimsService.CONNECT_SUCCESS){
+                    // 服务失败
+                }
             }
+            setNewStream();
         }
-        mNodeSocket = new Socket(mNodeServerIpAddr, mNodeServerPort);
-        mNodeInput = mNodeSocket.getInputStream();
-        mNodeOutput = mNodeSocket.getOutputStream();
-        return mNodeInput;
     }
 
     /**
-     * 返回发送者输出流
-     * 该函数不考虑同步
-     * **/
-    public OutputStream getSenderOutputStream(OutputStream oldOutput) throws IOException{
-        if(mNodeSocket == null){
-            mNodeSocket = new Socket(mNodeServerIpAddr, mNodeServerPort);
-            mNodeInput = mNodeSocket.getInputStream();
-            mNodeOutput = mNodeSocket.getOutputStream();
-        }
-        if(oldOutput == null || oldOutput != mNodeOutput){
-            return mNodeOutput;
-        }
+     * 开始发送接收线程
+     * */
+    public void start(){
+        //初始化socket
+        setNewStream();
+        // 获取sender和receiver即可
+        mSender = Sender.getSenderInstance();
+        mReceiver = Receiver.getReceiverInstance(mContext);
+        mSender.send(getLoginByte());
+    }
 
-        mReAccessTime ++ ;
-        if(mReAccessTime % reSetFrequency == 0){
-            //重设节点服务器
-            int flag = initNodeServerInfo();
-            if(flag != DimsService.CONNECT_SUCCESS){
-                return null;
-            }
-        }
+    /**
+     * 获得输入流
+     * */
+    public final String inputLock = new String("");
+    public InputStream getInputStream(){
+        return mNodeInput;
+    }
 
-        mNodeSocket = new Socket(mNodeServerIpAddr, mNodeServerPort);
-        mNodeInput = mNodeSocket.getInputStream();
-        mNodeOutput = mNodeSocket.getOutputStream();
+    public void send(byte[] sendByte){
+        mSender.send(sendByte);
+    }
+
+    /**
+     * 获得输出流
+     * */
+    public final String outputLock = new String("");
+    public OutputStream getOutputStream(){
         return mNodeOutput;
     }
 
-    /** 获取同步锁 **/
-    public SyncLock getSyncLock(){
-        return mSyncLock;
-    }
-
-    // 同步类
-    class SyncLock{
-
+    /**
+     * 发送者或者接收者触发的需要重连机制
+     * */
+    public void reConnected(){
+        synchronized (outputLock){
+            synchronized (inputLock){
+                try {
+                    mNodeOutput.close();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+                try {
+                    mNodeInput.close();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+                setNewStream();
+            }
+        }
     }
 
 }

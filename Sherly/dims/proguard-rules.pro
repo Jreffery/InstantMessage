@@ -15,3 +15,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keepclasseswithmembers class cc.appweb.www.dims.DimsSDK { *;}
+-keepclasseswithmembers interface cc.appweb.www.dims.OnConnectedResultListener { *; }

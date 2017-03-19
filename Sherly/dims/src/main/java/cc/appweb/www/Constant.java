@@ -14,7 +14,9 @@ public class Constant {
     /** appKey的meta-data key **/
     public static final String DIMS_APP_KEY = "DIMS_APP_KEY";
     /** 心跳包的发送频率 **/
-    public static final int HEART_BEAT_FREQUENCY = 10*1000;
+    public static final int HEART_BEAT_FREQUENCY = 100*1000;               // 100秒
+    /** 登录成功的广播 **/
+    public static final String BROADCAST_LOGIN_SUCCESS = "cc.appweb.www.dims.LOGIN_SUCCESS";
     /** 发送成功的广播 **/
     public static final String BROADCAST_SEND_SUCCESS = "cc.appweb.www.dims.SEND_SUCCESS";
     /** 接收到消息的广播 **/
