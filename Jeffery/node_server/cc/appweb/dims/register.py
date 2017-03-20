@@ -7,7 +7,7 @@ Created on 2016/10/6
 from twisted.internet import protocol
 from server import NodeFactory
 from cc.appweb.utils.configure import config
-import json, random
+import json
 
 # 注册者协议
 class RegisterProtocol(protocol.Protocol):

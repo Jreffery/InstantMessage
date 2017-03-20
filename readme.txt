@@ -3,17 +3,18 @@
 启动步骤
 1.启动唯一的主服务器
 	/Jeffery/main_server目录下：
-	python main.py
+	python main.py [configure.xml]
+	--[configure.xml] 是可选的配置文件，缺省的话会加载同目录下的configure.xml文件
 	--该操作将监听本机的8001（hardcode）端口
 	--接收来自nodeServer和user的所有请求
 	--nodeServer连接后不会断开，user响应完会断开
 
 2.节点服务器注册
 	/Jeffery/node_server目录下：
-	python main.py
+	python main.py [configure.xml]
 	--将随机选择端口（8002~8022）监听，作为节点服务器
 
-	python main.py
+	python main.py [configure1.xml]
 	--启动第二个节点服务器，如遇监听端口与第一个节点服务器相同，请关闭后再次启动
 	--启动完毕后，主服务器将拥有两个可用节点服务器
 	--修改主服务器代码下的阈值，可以hardcode将同一个appid下的两个用户分布在不同的节点服务器上，用以测试

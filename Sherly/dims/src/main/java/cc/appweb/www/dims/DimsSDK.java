@@ -141,6 +141,7 @@ public class DimsSDK {
      * */
     private static void bindDimsConnectService(){
         Intent intent = new Intent(mContext, DimsService.class);
+        mContext.startService(intent);
         mContext.bindService(intent, mDimsServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
