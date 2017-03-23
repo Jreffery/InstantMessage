@@ -8,6 +8,7 @@ Created on 2016/10/6
 from twisted.internet import reactor
 from cc.appweb.dims.factory import DimsFactory
 from cc.appweb.utils.configure import config
+from cc.appweb.utils.logger import logger
 import sys, json
 
 def __initConfigure__():
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     __initConfigure__()
     # 监听端口号8000，后期需可配置
     reactor.listenTCP(config.mainServerPort, DimsFactory())
+    logger.info('The Reactor listen at port: %s!',config.mainServerPort)
     # 进入事件循环
     reactor.run()
     

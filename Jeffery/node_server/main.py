@@ -10,6 +10,7 @@ from cc.appweb.dims.register import RegisterFactory
 from cc.appweb.utils.configure import config
 import sys, json
 
+
 def __initConfigure__():
     try:
         if len(sys.argv) == 2:

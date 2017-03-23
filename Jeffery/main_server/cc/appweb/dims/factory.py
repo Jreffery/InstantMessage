@@ -7,12 +7,14 @@ Created on 2016/10/6
 
 from twisted.internet.protocol import Factory
 from protocol import DimsProtocol
+from cc.appweb.utils.logger import logger
 
 class DimsFactory(Factory):
     nodeList = []            #只能存储节点服务器的连接对象
     
     def __init__(self):
-        print 'DIMS Main server run!'
+        #print 'DIMS Main server run!'
+        logger.info('DIMS Main server run!')
         self.disparcher = DispatchUserNode(self.nodeList)
         
     def buildProtocol(self, addr):

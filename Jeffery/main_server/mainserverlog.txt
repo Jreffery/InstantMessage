@@ -1,0 +1,4 @@
+2017-03-22 16:46:46,165 - MainserLogger - INFO - DIMS Main server run!
+2017-03-22 16:46:46,167 - MainserLogger - INFO - The Reactor run at port: 8001!
+2017-03-22 17:36:30,862 - MainserLogger - INFO - DIMS Main server run!
+2017-03-22 17:36:30,862 - MainserLogger - INFO - The Reactor listen at port: 8001!

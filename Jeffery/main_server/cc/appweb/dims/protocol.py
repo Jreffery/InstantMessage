@@ -6,6 +6,7 @@ Created on 2016/10/6
 '''
 from twisted.internet import protocol
 from abstract import ProtocolRunnable
+from cc.appweb.utils.logger import logger
 import json
 
 class DimsProtocol(protocol.Protocol):
@@ -21,7 +22,8 @@ class DimsProtocol(protocol.Protocol):
     
     # 创建连接时调用
     def connectionMade(self):
-        print 'Connection ' + self.host + ':' + str(self.keepport) + ' connected!' 
+        #print 'Connection ' + self.host + ':' + str(self.keepport) + ' connected!' 
+        logger.info('Connection %s : %s connected!',self.host,str(self.keepport))
         
     # 接收数据时调用
     def dataReceived(self, data):
@@ -41,10 +43,12 @@ class DimsProtocol(protocol.Protocol):
             response['code'] = 503
             response['errMsg'] = str(ex)
             self.transport.write(json.dumps(response))
+            
     
     # 连接断开时调用        
     def connectionLost(self, reason=protocol.connectionDone):
-        print 'Connection ' + self.host + ':' + str(self.keepport) + ' lost.'
+        #print 'Connection ' + self.host + ':' + str(self.keepport) + ' lost.'
+        logger.info('Connection %s : %s lost.',self.host,str(self.keepport))
         # 如果是节点服务器，则从服务集群中删除该服务器
         if self.isNode:
             self.factory.removeNode(self)
@@ -80,6 +84,7 @@ class ProtocolResolver():
         elif msg['type'] == 8020:
             self.service = MainTransferService(msg, self.protocol)
         else:
+            logger.exception('no such protocol')
             raise Exception, "no such protocol"
 
 #--------------------------------------Service--------------------------------
