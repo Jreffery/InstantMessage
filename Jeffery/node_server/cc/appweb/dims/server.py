@@ -8,6 +8,7 @@ Created on 2016/10/7
 from twisted.internet import protocol
 from abstract import ProtocolRunnable
 from cc.appweb.utils import byteEncode
+from cc.appweb.utils import logger
 import json
 
 # 对用户服务协议
@@ -18,10 +19,12 @@ class NodeProtocol(protocol.Protocol):
         self.factory = factory
         
     def connectionMade(self):
-        print 'Connection ' + self.host + ':' + str(self.port) + ' connected.'
+        # print 'Connection ' + self.host + ':' + str(self.port) + ' connected.'
+        logger.info('Connection %s : %s connected.',self.host,str(self.port))
         
     def connectionLost(self, reason=protocol.connectionDone):
-        print 'Connection ' + self.host + ':' + str(self.port) + ' lost.'
+        # print 'Connection ' + self.host + ':' + str(self.port) + ' lost.'
+        logger.info('Connection %s : %s lost.',self.host,str(self.port))
         postToMain = {}
         postToMain['type'] = 8011
         postToMain['usr'] = self.usr
@@ -85,6 +88,7 @@ class ProtocolResolver():
         elif msg['type'] == 8004:
             self.service = NoResponseService()
         else:
+            logger.exception('no such protocol')
             raise Exception, "no such protocol"
 
 # 认证服务，将用户加入集群

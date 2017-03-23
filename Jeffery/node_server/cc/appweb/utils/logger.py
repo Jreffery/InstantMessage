@@ -27,5 +27,4 @@ class Logger():
         return self.logger
 
 
-logger = Logger('mainserverlog.txt',1,'MainserverLogger').getlog()    
-    
+logger = Logger('nodeserverlog.txt',1,'NodeServerLogger').getlog()    

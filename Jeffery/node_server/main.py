@@ -8,6 +8,7 @@ Created on 2016/10/6
 from twisted.internet import reactor
 from cc.appweb.dims.register import RegisterFactory
 from cc.appweb.utils.configure import config
+from cc.appweb.utils.logger import logger
 import sys, json
 
 
@@ -33,6 +34,7 @@ if __name__ == '__main__':
     # 向主服务器注册节点服务器
     # ip端口 以后可配
     reactor.connectTCP(config.mainServerIp, config.mainServerPort, RegisterFactory(reactor))
+    logger.info('The Nodeserver Reactor run at IP: %s, port: %s',config.mainServerIp,config.mainServerPort)
     # 进入事件循环
     reactor.run()
     

@@ -7,6 +7,7 @@ Created on 2016/10/6
 from twisted.internet import protocol
 from server import NodeFactory
 from cc.appweb.utils.configure import config
+from cc.appweb.utils.logger import logger
 import json
 
 # 注册者协议
@@ -31,11 +32,13 @@ class RegisterFactory(protocol.ClientFactory):
 
     # 连接失败
     def clientConnectionFailed(self, connector, reason):
-        print 'Connection failed: ' + reason.getErrorMessage()
+        # print 'Connection failed: ' + reason.getErrorMessage()
+        logger.error('Connection failed: %s',reason.getErrorMessage())
         
     # 断开连接    
     def clientConnectionLost(self, connector, reason):
-        print 'Connection lost: ' + reason.getErrorMessage()
+        # print 'Connection lost: ' + reason.getErrorMessage()
+        logger.error('Connection lost: %s',reason.getErrorMessage())
     
 # 注册工人--真正执行注册的核心    
 class RegisterWorker():
@@ -58,11 +61,13 @@ class RegisterWorker():
         if resMsg['type'] == 7000:
             # 加入服务的响应
             if resMsg['code'] == 200:
-                print 'Dims Node server run!'
+               # print 'Dims Node server run!'
+                logger.info('Dims Node server run!')
                 self.nodeFactory = NodeFactory(self.protocol)
                 self.reactor.listenTCP(self.listenPort, self.nodeFactory)
             else:
-                print resMsg['errMsg']
+                # print resMsg['errMsg']
+                logger.error(resMsg['errMsg'])
         if resMsg['type'] == 7020:
             appid = resMsg['appid']
             usr = resMsg['receiver']
