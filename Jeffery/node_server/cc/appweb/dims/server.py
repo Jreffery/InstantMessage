@@ -32,7 +32,8 @@ class NodeProtocol(protocol.Protocol):
         self.factory.postMsgToMain(json.dumps(postToMain))
         
     def dataReceived(self, data):
-        print data
+        # print data
+        logger.info(data)
         try:
             resolver = ProtocolResolver(self, data)  
             self.response = resolver.getRunnable()
