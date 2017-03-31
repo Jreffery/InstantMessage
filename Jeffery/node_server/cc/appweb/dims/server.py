@@ -8,7 +8,7 @@ Created on 2016/10/7
 from twisted.internet import protocol
 from abstract import ProtocolRunnable
 from cc.appweb.utils import byteEncode
-from cc.appweb.utils import logger
+from cc.appweb.utils.logger import logger
 import json
 
 # 对用户服务协议
