@@ -4,3 +4,13 @@
 2017-03-22 17:36:30,862 - MainserLogger - INFO - The Reactor listen at port: 8001!
 2017-03-23 16:12:30,040 - MainserverLogger - INFO - DIMS Main server run!
 2017-03-23 16:12:30,045 - MainserverLogger - INFO - The MainServer Reactor listen at port: 8001!
+2017-03-31 11:54:05,092 - MainserverLogger - INFO - DIMS Main server run!
+2017-03-31 11:54:05,092 - MainserverLogger - INFO - The MainServer Reactor listen at port: 8001!
+2017-03-31 13:10:03,812 - MainServerLog - INFO - DIMS Main server run!
+2017-03-31 13:10:03,813 - MainServerLog - INFO - The MainServer Reactor listen at port: 8001!
+2017-03-31 13:19:05,157 - MainServerLog - INFO - DIMS Main server run!
+2017-03-31 13:19:05,158 - MainServerLog - INFO - The MainServer Reactor listen at port: 8001!
+2017-03-31 13:34:39,411 - MainServerLog - INFO - DIMS Main server run!
+2017-03-31 13:34:39,414 - MainServerLog - INFO - The MainServer Reactor listen at port: 8001!
+2017-03-31 13:34:54,723 - MainServerLog - INFO - Connection 192.168.253.1 : 2674 connected!
+2017-03-31 13:35:05,727 - MainServerLog - INFO - Connection 192.168.253.1 : 2674 lost.

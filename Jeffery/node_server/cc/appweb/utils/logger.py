@@ -1,5 +1,11 @@
-import logging
+#encoding: utf-8
+'''
+Created on 2017年3月27日
 
+@author: Ransecy
+'''
+import logging
+from configure import config
 
 
 class Logger():
@@ -17,7 +23,7 @@ class Logger():
         fh.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
-        formatter = format_dict[int(loglevel)]
+        formatter = format_dict[loglevel]
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         self.logger.addHandler(fh)
@@ -26,5 +32,4 @@ class Logger():
     def getlog(self):
         return self.logger
 
-
-logger = Logger('nodeserverlog.txt',1,'NodeServerLogger').getlog()    
+logger = Logger(config.nodeServerLog, config.nodeServerLogLevel, config.nodeServerLogName).getlog()    

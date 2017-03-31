@@ -29,9 +29,9 @@ def __initConfigure__():
 # 主程序，主服务器的入口
 if __name__ == '__main__':
     __initConfigure__()
-    # 监听端口号8000，后期需可配置
+    # 可配置ip和端口
     reactor.listenTCP(config.mainServerPort, DimsFactory())
-    logger.info('The MainServer Reactor listen at port: %s!',config.mainServerPort)
+    logger.info('The MainServer Reactor listen at port: %s!', config.mainServerPort)
     # 进入事件循环
     reactor.run()
     

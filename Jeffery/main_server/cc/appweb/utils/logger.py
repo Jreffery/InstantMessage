@@ -1,6 +1,11 @@
+#encoding: utf-8
+'''
+Created on 2017年3月26日
+
+@author: Ransecy
+'''
 import logging
-
-
+from configure import config
 
 class Logger():
     def __init__(self, logname, loglevel, logger):
@@ -26,6 +31,5 @@ class Logger():
     def getlog(self):
         return self.logger
 
-
-logger = Logger('mainserverlog.txt',1,'MainserverLogger').getlog()    
-    
+# 路径在configure 默认配置
+logger = Logger(config.mainServerLog, config.mainServerLogLevel, config.mainServerLogName).getlog()  

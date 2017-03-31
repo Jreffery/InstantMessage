@@ -4,4 +4,5 @@ encoding//cc/appweb/dims/register.py=utf-8
 encoding//cc/appweb/dims/server.py=utf-8
 encoding//cc/appweb/utils/byteEncode.py=utf-8
 encoding//cc/appweb/utils/configure.py=utf-8
+encoding//cc/appweb/utils/logger.py=utf-8
 encoding/main.py=utf-8

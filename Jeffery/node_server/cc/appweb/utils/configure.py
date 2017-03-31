@@ -14,6 +14,11 @@ class Config():
     mainServerPort = 8001
     nodeServerIp = '127.0.0.1'
     nodeServerPort = 8002
+    
+    # hardcode 的配置
+    nodeServerLog = "nodeserverlog.txt"
+    nodeServerLogLevel = 1
+    nodeServerLogName = "NodeServerLog"
     def __init__(self):
         pass
     
